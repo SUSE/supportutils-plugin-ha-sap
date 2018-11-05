@@ -33,6 +33,29 @@ validate_rpm_if_installed() {
     echo
 }
 
+## SAP BASIC Tuning ##
+## if SLES12  chkconfig -l tuned
+## if SLES12  systemctl status tuned.service
+RELEASE=$(cat /etc/os-release | grep VERSION=)
+if [ $RELEASE == 'VERSION="11.4"' ]; then
+   echo "OS Release: $RELEASE"
+   plugin_command " chkconfig -l boot.sapconf "
+   plugin_command "cat /etc/sysconfig/sapconf | grep -v \^#"
+
+else 
+#if [ $RELEASE == VERSION="12.2" ]; then
+echo "OS Release: $RELEASE"
+plugin_command "systemctl status sapconf"
+plugin_command "systemctl status tuned.service"
+plugin_command "tuned-adm list | grep Current "
+plugin_command "saptune solution list "
+plugin_command "saptune note list "
+fi 
+
+## SAP Host Agent ##
+plugin_command "/usr/sap/hostctrl/exe/saphostexec -version"
+plugin_command "/usr/sap/hostctrl/exe/saphostexec -status"
+
 CLUSTER_CONFIG="cluster_config.txt"
 RE_SAPHANA='ocf:suse:SAPHanaTopology'
 # Get SAP HANA Instances
@@ -66,6 +89,9 @@ rm -f $CLUSTER_CONFIG
 section_header "Supportconfig Plugin for $TITLE, v${SVER}"
 RPMLIST="
 SAPHanaSR
+sapconf
+tuned
+saptune
 "
 
 for THISRPM in $RPMLIST; do
