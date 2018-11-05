@@ -34,8 +34,6 @@ validate_rpm_if_installed() {
 }
 
 ## SAP BASIC Tuning ##
-## if SLES12  chkconfig -l tuned
-## if SLES12  systemctl status tuned.service
 RELEASE=$(cat /etc/os-release | grep VERSION=)
 if [ $RELEASE == 'VERSION="11.4"' ]; then
    echo "OS Release: $RELEASE"
