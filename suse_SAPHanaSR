@@ -4,13 +4,13 @@
 # Description: Gathers important troubleshooting information
 #              about a SUSE SAP HANA Configurations
 # License:     GPLv2
-# Author:      Jason Record <jason.record@suse.com>
-# Modified:    2018 Mar 14
+# Author:      Jason Record <jason.record@suse.com> Rich Brunt <rich.brunt@suse.com>
+# Modified:    2018 Nov
 #############################################################
 
 SVER='1.0.2'
 RCFILE="/usr/lib/supportconfig/resources/scplugin.rc"
-TITLE="SUSE SAP HANA"
+TITLE="SUSE SAP"
 INSTANCES=()
 
 [ -s $RCFILE ] && . $RCFILE || { echo "ERROR: Initializing resource file: $RCFILE"; exit 1; }
@@ -32,17 +32,30 @@ validate_rpm_if_installed() {
     fi
     echo
 }
-
+## Docs  ##
+section_header "Referencee Documentation"
+echo -e "Current Documentation:\n
+\thttps://www.suse.com/documentation/sles-for-sap-15/
+Tuning: 
+\thttps://www.suse.com/documentation/sles-for-sap-12/singlehtml/book_s4s/book_s4s.html#sec.saptune \n
+Best Practice Guides: 
+\tSAP HANA SR Performance Optimized: SLES 12sp1+:\t https://www.suse.com/media/white-paper/suse_linux_enterprise_server_for_sap_applications_12_sp1.pdf \n
+\tSAP HANA SR Performance Optimized: SLES 11sp4 :\t https://www.suse.com/media/guide/sap_hana_sr_performance_optimized_scenario_11_sp4.pdf \n
+\tSAP HANA SR Cost Optimized: SLES 12sp1+ :\thttps://www.suse.com/media/white-paper/sap_hana_sr_cost_optimized_scenario_12_sp1.pdf \n 
+\tSAP NetWeaver High Availability Cluster 7.40 Setup Guide:\t https://www.suse.com/documentation/suse-best-practices/pdfdoc/SAP_HA740_SetupGuide_color_en.pdf \n
+"
 ## SAP BASIC Tuning ##
+section_header "SAP Tuning information"
+
 RELEASE=$(cat /etc/os-release | grep VERSION=)
 if [ $RELEASE == 'VERSION="11.4"' ]; then
-   echo "OS Release: $RELEASE"
+   echo -e  "OS Release: $RELEASE \n"
    plugin_command " chkconfig -l boot.sapconf "
    plugin_command "cat /etc/sysconfig/sapconf | grep -v \^#"
 
 else 
 #if [ $RELEASE == VERSION="12.2" ]; then
-echo "OS Release: $RELEASE"
+echo -e  "OS Release: $RELEASE \n"
 plugin_command "systemctl status sapconf"
 plugin_command "systemctl status tuned.service"
 plugin_command "tuned-adm list | grep Current "
@@ -56,6 +69,26 @@ plugin_command "/usr/sap/hostctrl/exe/saphostexec -status"
 
 CLUSTER_CONFIG="cluster_config.txt"
 RE_SAPHANA='ocf:suse:SAPHanaTopology'
+SAPCONTROLEXIT="sapcontrol return codes:\n 
+  0  Last webmethod call successful \n 
+  1  Last webmethod call failed, invalid parameter \n 
+  2  StartWait, StopWait, WaitforStarted, WaitforStopped, RestartServiceWait timed out \n 
+  3  GetProcessList succeeded, all processes running correctly \n 
+  4  GetProcessList succeeded, all processes stopped \n"
+SAPHDB1="lanscapeHostConfiguration.py return codes: \n 
+  0  Fatal \n 
+  1  Error \n
+  2  Warning \n 
+  3  Info \n 
+  4  OK \n 
+  5  Ignore \n "
+SAPHDB2="systemReplicationStatus.py return codes:\n 
+  10  NoHSR \n
+  11  Error \n 
+  12  Unknown ( Normal rc for Secondaray/slave node )\n 
+  13  Initializing \n 
+  14  Syncing \n 
+  15  Active ( Desired state for Primary/master node ) \n"
 # Get SAP HANA Instances
 crm configure show &> $CLUSTER_CONFIG
 while read LINE
@@ -105,6 +138,8 @@ section_header "$TITLE Troubleshooting Commands"
 plugin_command "SAPHanaSR-showAttr"
 echo "RETURN CODE: $?"; echo
 
+plugin_command "/usr/sap/hostctrl/exe/saphostctrl -function ListInstances"
+
 INST_CNT=1
 LABEL=0
 ADM=1
@@ -119,11 +154,11 @@ do
 	plugin_command "su - ${ELEMENT[${ADM}]} -c 'hdbnsutil -sr_state'"
 	echo "RETURN CODE: $?"; echo
 	plugin_command "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function GetProcessList'"
-	echo "RETURN CODE: $?"; echo
+	echo "RETURN CODE: $?"; echo -e $SAPCONTROLEXIT; echo
 	plugin_command "su - ${ELEMENT[${ADM}]} -c 'HDBSettings.sh landscapeHostConfiguration.py --sapcontrol=1'"
-	echo "RETURN CODE: $?"; echo
+	echo "RETURN CODE: $?"; echo -e $SAPHDB1; echo
 	plugin_command "su - ${ELEMENT[${ADM}]} -c 'HDBSettings.sh systemReplicationStatus.py'"
-	echo "RETURN CODE: $?"; echo
+	echo "RETURN CODE: $?"; echo -e $SAPHDB2; echo
 	plugin_command "su - ${ELEMENT[${ADM}]} -c 'HDBSettings.sh systemOverview.py'"
 	echo "RETURN CODE: $?"; echo
 	plugin_command "su - ${ELEMENT[${ADM}]} -c 'HDB info'"
