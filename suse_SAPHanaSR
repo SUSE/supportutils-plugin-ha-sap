@@ -34,15 +34,15 @@ validate_rpm_if_installed() {
 }
 ## Docs  ##
 section_header "Referencee Documentation"
-echo -e "Current Documentation:\n
+echo -e "Current Documentation:
 \thttps://www.suse.com/documentation/sles-for-sap-15/
 Tuning: 
-\thttps://www.suse.com/documentation/sles-for-sap-12/singlehtml/book_s4s/book_s4s.html#sec.saptune \n
+\thttps://www.suse.com/documentation/sles-for-sap-12/singlehtml/book_s4s/book_s4s.html#sec.saptune 
 Best Practice Guides: 
-\tSAP HANA SR Performance Optimized: SLES 12sp1+:\t https://www.suse.com/media/white-paper/suse_linux_enterprise_server_for_sap_applications_12_sp1.pdf \n
-\tSAP HANA SR Performance Optimized: SLES 11sp4 :\t https://www.suse.com/media/guide/sap_hana_sr_performance_optimized_scenario_11_sp4.pdf \n
-\tSAP HANA SR Cost Optimized: SLES 12sp1+ :\thttps://www.suse.com/media/white-paper/sap_hana_sr_cost_optimized_scenario_12_sp1.pdf \n 
-\tSAP NetWeaver High Availability Cluster 7.40 Setup Guide:\t https://www.suse.com/documentation/suse-best-practices/pdfdoc/SAP_HA740_SetupGuide_color_en.pdf \n
+\tSAP HANA SR Performance Optimized: 12SP1+:\t https://www.suse.com/media/white-paper/suse_linux_enterprise_server_for_sap_applications_12_sp1.pdf 
+\tSAP HANA SR Performance Optimized: 11SP4 :\t https://www.suse.com/media/guide/sap_hana_sr_performance_optimized_scenario_11_sp4.pdf 
+\tSAP HANA SR Cost Optimized: 12SP1+ :\thttps://www.suse.com/media/white-paper/sap_hana_sr_cost_optimized_scenario_12_sp1.pdf  
+\tSAP NetWeaver High Availability Cluster 7.40 Setup Guide:\t https://www.suse.com/documentation/suse-best-practices/pdfdoc/SAP_HA740_SetupGuide_color_en.pdf
 "
 ## SAP BASIC Tuning ##
 section_header "SAP Tuning information"
