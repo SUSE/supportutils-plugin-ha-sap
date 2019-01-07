@@ -39,10 +39,10 @@ echo -e "Current Documentation:
 Tuning: 
 \thttps://www.suse.com/documentation/sles-for-sap-12/singlehtml/book_s4s/book_s4s.html#sec.saptune 
 Best Practice Guides: 
-\tSAP HANA SR Performance Optimized: 12SP1+:\t https://www.suse.com/media/white-paper/suse_linux_enterprise_server_for_sap_applications_12_sp1.pdf 
-\tSAP HANA SR Performance Optimized: 11SP4 :\t https://www.suse.com/media/guide/sap_hana_sr_performance_optimized_scenario_11_sp4.pdf 
-\tSAP HANA SR Cost Optimized: 12SP1+ :\thttps://www.suse.com/media/white-paper/sap_hana_sr_cost_optimized_scenario_12_sp1.pdf  
-\tSAP NetWeaver High Availability Cluster 7.40 Setup Guide:\t https://www.suse.com/documentation/suse-best-practices/pdfdoc/SAP_HA740_SetupGuide_color_en.pdf
+\tSAP HANA SR Performance Optimized: SLES 12sp1+:\t https://www.suse.com/media/white-paper/suse_linux_enterprise_server_for_sap_applications_12_sp1.pdf 
+\tSAP HANA SR Performance Optimized: SLES 11sp4 :\t https://www.suse.com/media/guide/sap_hana_sr_performance_optimized_scenario_11_sp4.pdf 
+\tSAP HANA SR Cost Optimized: SLES 12sp1+ :\thttps://www.suse.com/media/white-paper/sap_hana_sr_cost_optimized_scenario_12_sp1.pdf  
+\tSAP NetWeaver High Availability Cluster 7.40 Setup Guide:\t https://www.suse.com/documentation/suse-best-practices/pdfdoc/SAP_HA740_SetupGuide_color_en.pdf 
 "
 ## SAP BASIC Tuning ##
 section_header "SAP Tuning information"
@@ -63,12 +63,23 @@ plugin_command "saptune solution list "
 plugin_command "saptune note list "
 fi 
 
+#############################################################
+section_header "Supportconfig Plugin for $TITLE, v${SVER}"
+RPMLIST="
+SAPHanaSR
+sapconf
+tuned
+saptune
+"
+
+for THISRPM in $RPMLIST; do
+    validate_rpm_if_installed $THISRPM
+done
+
 ## SAP Host Agent ##
 plugin_command "/usr/sap/hostctrl/exe/saphostexec -version"
 plugin_command "/usr/sap/hostctrl/exe/saphostexec -status"
-
-CLUSTER_CONFIG="cluster_config.txt"
-RE_SAPHANA='ocf:suse:SAPHanaTopology'
+## SAP Exit Code Index
 SAPCONTROLEXIT="sapcontrol return codes:\n 
   0  Last webmethod call successful \n 
   1  Last webmethod call failed, invalid parameter \n 
@@ -89,45 +100,25 @@ SAPHDB2="systemReplicationStatus.py return codes:\n
   13  Initializing \n 
   14  Syncing \n 
   15  Active ( Desired state for Primary/master node ) \n"
-# Get SAP HANA Instances
-crm configure show &> $CLUSTER_CONFIG
+
+# Get SAP Instances using saphostctrl function.  Relies on sap interface to be working. 
+SAP_CONFIG="sap_config.txt"
+/usr/sap/hostctrl/exe/saphostctrl -function ListInstances | awk '{print $4,$6}' &> $SAP_CONFIG
+
 while read LINE
 do
-	if [[ $LINE =~ $RE_SAPHANA ]]; then
-		read -r -a PARAMS <<< $LINE
-		SID=''
-		INST=''
-		SIDADM=''
-		INST_NAME=''
-		for VALUE in "${PARAMS[@]}"
-		do
-			TMPSID=${VALUE//SID=/}
-			TMPINST=${VALUE//InstanceNumber=/}
-			if (( ${#TMPSID} != ${#VALUE} )); then
-				SID=$TMPSID
-			elif (( ${#TMPINST} != ${#VALUE} )); then
-				INST=$TMPINST
-			fi
-		done
-		SIDADM="$(tr '[:upper:]' '[:lower:]' <<< $SID)adm"
-		INST_NAME="SID=$SID:InstanceNumber=$INST"
-		INSTANCES+=("${INST_NAME} ${SIDADM} ${SID} ${INST}")
-	fi
-done < $CLUSTER_CONFIG
-rm -f $CLUSTER_CONFIG
+        SID=''
+        SIDADM=''
+        SID=${LINE%\ *}
+        SIDADM="$(tr '[:upper:]' '[:lower:]' <<< $SID)adm"
+        INST=''
+        INST_NAME=''
+        INST=${LINE#*\ *}
+        INST_NAME="SID=$SID:InstanceNumber=$INST"
+        INSTANCES+=("${INST_NAME} ${SIDADM} ${SID} ${INST}")
+done < $SAP_CONFIG
+rm -r $SAP_CONFIG
 
-#############################################################
-section_header "Supportconfig Plugin for $TITLE, v${SVER}"
-RPMLIST="
-SAPHanaSR
-sapconf
-tuned
-saptune
-"
-
-for THISRPM in $RPMLIST; do
-    validate_rpm_if_installed $THISRPM
-done
 
 #$section_header "$TITLE Config Files"
 
@@ -140,6 +131,7 @@ echo "RETURN CODE: $?"; echo
 
 plugin_command "/usr/sap/hostctrl/exe/saphostctrl -function ListInstances"
 
+# Run through each instance detected and display information about it
 INST_CNT=1
 LABEL=0
 ADM=1
@@ -173,8 +165,11 @@ do
 	if [[ -d $INSTANCE_PROFILE_DIR ]]; then
 		pconf_files ${INSTANCE_PROFILE_DIR}/${ELEMENT[${SID}]}_*
 	fi
+	 INST_CNT=$[ INST_CNT + 1 ]
 done
 
 section_header "$TITLE Log Files"
 plugin_command "egrep -i 'saphana' /var/log/messages | tail -1000"
+section_header "SAP Log Files"
+plugin_command "egrep -i 'SAPDatabase|SAPInstance|SAPStartsrv|sapcontrol|saphostctrl' /var/log/messages | tail -1000"
 
