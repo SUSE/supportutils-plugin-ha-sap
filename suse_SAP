@@ -4,11 +4,11 @@
 # Description: Gathers important troubleshooting information
 #              about a SUSE SAP HANA Configurations
 # License:     GPLv2
-# Author:      Jason Record <jason.record@suse.com> Rich Brunt <rich.brunt@suse.com>
-# Modified:    2018 Nov
+# Author:      Jason Record <jason.record@suse.com> Rich Brunt <rich.brunt@suse.com> Colin Hamilton <colin.hamilton@suse.com>
+# Modified:    2019 Jan
 #############################################################
 
-SVER='1.0.2'
+SVER='1.0.3'
 RCFILE="/usr/lib/supportconfig/resources/scplugin.rc"
 TITLE="SUSE SAP"
 INSTANCES=()
@@ -16,22 +16,22 @@ INSTANCES=()
 [ -s $RCFILE ] && . $RCFILE || { echo "ERROR: Initializing resource file: $RCFILE"; exit 1; }
 
 validate_rpm_if_installed() {
-    THISRPM=$1
-    echo "#==[ Validating RPM ]=================================#"
-    if rpm -q $THISRPM >/dev/null 2>&1; then
-        echo "# rpm -V $THISRPM"
-
-        if rpm -V $THISRPM; then
-            echo "Status: Passed"
-        else
-            echo "Status: WARNING"
-        fi
-    else
-        echo "package $THISRPM is not installed"
-        echo "Status: Skipped"
-    fi
-    echo
+	THISRPM=$1
+	echo "#==[ Validating RPM ]=================================#"
+	if rpm -q $THISRPM >/dev/null 2>&1; then
+		echo "# rpm -V $THISRPM"
+		if rpm -V $THISRPM; then
+			echo "Status: Passed"
+		else
+			echo "Status: WARNING"
+		fi
+	else
+		echo "package $THISRPM is not installed"
+		echo "Status: Skipped"
+	fi
+	echo
 }
+
 ## Docs  ##
 section_header "Referencee Documentation"
 echo -e "Current Documentation:
@@ -44,25 +44,6 @@ Best Practice Guides:
 \tSAP HANA SR Cost Optimized: SLES 12sp1+ :\thttps://www.suse.com/media/white-paper/sap_hana_sr_cost_optimized_scenario_12_sp1.pdf  
 \tSAP NetWeaver High Availability Cluster 7.40 Setup Guide:\t https://www.suse.com/documentation/suse-best-practices/pdfdoc/SAP_HA740_SetupGuide_color_en.pdf 
 "
-## SAP BASIC Tuning ##
-section_header "SAP Tuning information"
-
-RELEASE=$(cat /etc/os-release | grep VERSION=)
-if [ $RELEASE == 'VERSION="11.4"' ]; then
-   echo -e  "OS Release: $RELEASE \n"
-   plugin_command " chkconfig -l boot.sapconf "
-   plugin_command "cat /etc/sysconfig/sapconf | grep -v \^#"
-
-else 
-#if [ $RELEASE == VERSION="12.2" ]; then
-echo -e  "OS Release: $RELEASE \n"
-plugin_command "systemctl status sapconf"
-plugin_command "systemctl status tuned.service"
-plugin_command "tuned-adm list | grep Current "
-plugin_command "saptune solution list "
-plugin_command "saptune note list "
-fi 
-
 #############################################################
 section_header "Supportconfig Plugin for $TITLE, v${SVER}"
 RPMLIST="
@@ -73,10 +54,28 @@ saptune
 "
 
 for THISRPM in $RPMLIST; do
-    validate_rpm_if_installed $THISRPM
+	validate_rpm_if_installed $THISRPM
 done
 
+## SAP BASIC Tuning ##
+section_header "SAP Tuning information"
+
+RELEASE=$(cat /etc/os-release | grep VERSION=)
+if [ $RELEASE == 'VERSION="11.4"' ]; then
+	echo -e  "OS Release: $RELEASE \n"
+	plugin_command " chkconfig -l boot.sapconf "
+	plugin_command "cat /etc/sysconfig/sapconf | grep -v \^#"
+else 
+	echo -e  "OS Release: $RELEASE \n"
+	plugin_command "systemctl status sapconf"
+	plugin_command "systemctl status tuned.service"
+	plugin_command "tuned-adm list | grep Current "
+	plugin_command "saptune solution list "
+	plugin_command "saptune note list "
+fi 
+
 ## SAP Host Agent ##
+section_header "SAP Host Agent Information"
 plugin_command "/usr/sap/hostctrl/exe/saphostexec -version"
 plugin_command "/usr/sap/hostctrl/exe/saphostexec -status"
 ## SAP Exit Code Index
@@ -107,28 +106,17 @@ SAP_CONFIG="sap_config.txt"
 
 while read LINE
 do
-        SID=''
-        SIDADM=''
-        SID=${LINE%\ *}
-        SIDADM="$(tr '[:upper:]' '[:lower:]' <<< $SID)adm"
-        INST=''
-        INST_NAME=''
-        INST=${LINE#*\ *}
-        INST_NAME="SID=$SID:InstanceNumber=$INST"
-        INSTANCES+=("${INST_NAME} ${SIDADM} ${SID} ${INST}")
+	SID=$(echo $LINE | awk '{print $1}')
+	SIDADM="$(tr '[:upper:]' '[:lower:]' <<< $SID)adm"
+	INST=$(echo $LINE | awk '{print $2}')
+	INST_NAME="SID=$SID:InstanceNumber=$INST"
+	INSTANCES+=("${INST_NAME} ${SIDADM} ${SID} ${INST}")
 done < $SAP_CONFIG
 rm -r $SAP_CONFIG
-
-
-#$section_header "$TITLE Config Files"
-
-#pconf_files \
-    #/etc/salt/minion.d/_schedule.conf
 
 section_header "$TITLE Troubleshooting Commands"
 plugin_command "SAPHanaSR-showAttr"
 echo "RETURN CODE: $?"; echo
-
 plugin_command "/usr/sap/hostctrl/exe/saphostctrl -function ListInstances"
 
 # Run through each instance detected and display information about it
@@ -139,27 +127,34 @@ SID=2
 NUM=3
 for INSTANCE in "${INSTANCES[@]}"
 do
+	# take the INSTANCE variable and turn it into a new array called ELEMENT. Rather than refer to the items in the array by their numeric placement the above 4 variables will be used as reference.
 	read -r -a ELEMENT <<< $INSTANCE
 	section_header "$TITLE Instance $INST_CNT of ${#INSTANCES[@]}: ${ELEMENT[${LABEL}]}"
+	HDBEXIST=true
 	plugin_command "su - ${ELEMENT[${ADM}]} -c 'HDB version'"
-	echo "RETURN CODE: $?"; echo
-	plugin_command "su - ${ELEMENT[${ADM}]} -c 'hdbnsutil -sr_state'"
-	echo "RETURN CODE: $?"; echo
+	if [[ $? == 0 ]]; then
+		echo "RETURN CODE: $?"; echo
+		plugin_command "su - ${ELEMENT[${ADM}]} -c 'hdbnsutil -sr_state'"
+		echo "RETURN CODE: $?"; echo
+		plugin_command "su - ${ELEMENT[${ADM}]} -c 'HDBSettings.sh landscapeHostConfiguration.py --sapcontrol=1'"
+		echo "RETURN CODE: $?"; echo -e $SAPHDB1; echo
+		plugin_command "su - ${ELEMENT[${ADM}]} -c 'HDBSettings.sh systemReplicationStatus.py'"
+		echo "RETURN CODE: $?"; echo -e $SAPHDB2; echo
+		plugin_command "su - ${ELEMENT[${ADM}]} -c 'HDBSettings.sh systemOverview.py'"
+		echo "RETURN CODE: $?"; echo
+		plugin_command "su - ${ELEMENT[${ADM}]} -c 'HDB info'"
+		echo "RETURN CODE: $?"; echo
+	else
+		echo "RETURN CODE: $?"; echo
+		HDBEXIST=false
+	fi
 	plugin_command "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function GetProcessList'"
 	echo "RETURN CODE: $?"; echo -e $SAPCONTROLEXIT; echo
-	plugin_command "su - ${ELEMENT[${ADM}]} -c 'HDBSettings.sh landscapeHostConfiguration.py --sapcontrol=1'"
-	echo "RETURN CODE: $?"; echo -e $SAPHDB1; echo
-	plugin_command "su - ${ELEMENT[${ADM}]} -c 'HDBSettings.sh systemReplicationStatus.py'"
-	echo "RETURN CODE: $?"; echo -e $SAPHDB2; echo
-	plugin_command "su - ${ELEMENT[${ADM}]} -c 'HDBSettings.sh systemOverview.py'"
-	echo "RETURN CODE: $?"; echo
-	plugin_command "su - ${ELEMENT[${ADM}]} -c 'HDB info'"
-	echo "RETURN CODE: $?"; echo
-	INSTANCE_HOME=$(su - ${ELEMENT[${ADM}]} -c 'pwd' 2>/dev/null)
-	BASE=$(dirname $INSTANCE_HOME)
-	INSTANCE_CONFIG_DIR="${BASE}/SYS/global/hdb/custom/config"
-	INSTANCE_PROFILE_DIR="${BASE}/SYS/profile"
-	if [[ -d $INSTANCE_CONFIG_DIR ]]; then
+
+	INSTANCE_PROFILE_DIR=$(su - ${ELEMENT[${ADM}]} -c 'cdpro && pwd' 2>/dev/null)
+	INSTANCE_CONFIG_DIR=$(su - ${ELEMENT[${ADM}]} -c 'cdcoc && pwd' 2>/dev/null)
+	
+	if [[ -d $INSTANCE_CONFIG_DIR ]] && [[ $HDBEXIST == true ]]; then
 		pconf_files ${INSTANCE_CONFIG_DIR}/global.ini ${INSTANCE_CONFIG_DIR}/nameserver.ini
 	fi
 	if [[ -d $INSTANCE_PROFILE_DIR ]]; then
