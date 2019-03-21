@@ -164,7 +164,6 @@ do
 	fi
 	 INST_CNT=$[ INST_CNT + 1 ]
 ## Adding support for sap-suse-cluster-connector  ##
-# RPM_CONNECTOR=`rpm -qa | egrep "sap-suse-cluster-connector|sap_suse_cluster_connector"`
 	plugin_command "rpm -qa | egrep 'sap-suse-cluster-connector|sap_suse_cluster_connector'"
 	if [ $? -eq 0 ]; then
 	plugin_command "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function HAGetFailoverConfig'"
