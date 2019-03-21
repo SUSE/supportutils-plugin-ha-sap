@@ -51,6 +51,8 @@ SAPHanaSR
 sapconf
 tuned
 saptune
+sap-suse-cluster-connector
+sap_suse_cluster_connector
 "
 
 for THISRPM in $RPMLIST; do
@@ -161,10 +163,24 @@ do
 		pconf_files ${INSTANCE_PROFILE_DIR}/${ELEMENT[${SID}]}_*
 	fi
 	 INST_CNT=$[ INST_CNT + 1 ]
+## Adding support for sap-suse-cluster-connector  ##
+# RPM_CONNECTOR=`rpm -qa | egrep "sap-suse-cluster-connector|sap_suse_cluster_connector"`
+	plugin_command "rpm -qa | egrep 'sap-suse-cluster-connector|sap_suse_cluster_connector'"
+	if [ $? -eq 0 ]; then
+	plugin_command "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function HAGetFailoverConfig'"
+	echo "RETURN CODE: $?"; echo 
+	plugin_command "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function HACheckFailoverConfig'"
+	echo "RETURN CODE: $?"; echo 
+	plugin_command "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function HACheckConfig'"
+	echo "RETURN CODE: $?"; echo 
+        fi		
 done
 
 section_header "$TITLE Log Files"
-plugin_command "egrep -i 'saphana' /var/log/messages | tail -1000"
-section_header "SAP Log Files"
-plugin_command "egrep -i 'SAPDatabase|SAPInstance|SAPStartsrv|sapcontrol|saphostctrl' /var/log/messages | tail -1000"
+        if [ $RELEASE == 'VERSION="11.4"' ]; then
+        plugin_command "egrep -i 'saphana|SAPDatabase|SAPInstance|SAPStartsrv|sapcontrol|saphostctrl' /var/log/messages | tail -1000"
+        else
+        plugin_command "egrep -i 'saphana|SAPDatabase|SAPInstance|SAPStartsrv|sapcontrol|saphostctrl' /var/log/messages | tail -1000"
+        plugin_command "egrep -i 'saphana|SAPDatabase|SAPInstance|SAPStartsrv|sapcontrol|saphostctrl' /var/log/pacemaker.log | tail -1000"
+        fi
 
