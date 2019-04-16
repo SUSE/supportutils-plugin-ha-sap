@@ -120,6 +120,7 @@ section_header "$TITLE Troubleshooting Commands"
 plugin_command "SAPHanaSR-showAttr"
 echo "RETURN CODE: $?"; echo
 plugin_command "/usr/sap/hostctrl/exe/saphostctrl -function ListInstances"
+plugin_command "/usr/bin/cat /usr/sap/sapservices"
 
 # Run through each instance detected and display information about it
 INST_CNT=1
