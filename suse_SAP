@@ -165,22 +165,19 @@ do
 	fi
 	 INST_CNT=$[ INST_CNT + 1 ]
 ## Adding support for sap-suse-cluster-connector  ##
-	plugin_command "rpm -qa | egrep 'sap-suse-cluster-connector|sap_suse_cluster_connector'"
-	if [ $? -eq 0 ]; then
-	plugin_command "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function HAGetFailoverConfig'"
-	echo "RETURN CODE: $?"; echo 
-	plugin_command "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function HACheckFailoverConfig'"
-	echo "RETURN CODE: $?"; echo 
-	plugin_command "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function HACheckConfig'"
-	echo "RETURN CODE: $?"; echo 
-        fi		
+        plugin_command "rpm -qa | grep -E 'sap-suse-cluster-connector|sap_suse_cluster_connector'"
+        if [ $? -eq 0 ]; then
+                plugin_command "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function HAGetFailoverConfig'"
+                echo "RETURN CODE: $?"; echo 
+                plugin_command "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function HACheckFailoverConfig'"
+                echo "RETURN CODE: $?"; echo 
+                plugin_command "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function HACheckConfig'"
+                echo "RETURN CODE: $?"; echo 
+        fi
 done
 
 section_header "$TITLE Log Files"
-        if [ $RELEASE == 'VERSION="11.4"' ]; then
-        plugin_command "egrep -i 'saphana|SAPDatabase|SAPInstance|SAPStartsrv|sapcontrol|saphostctrl' /var/log/messages | tail -1000"
-        else
-        plugin_command "egrep -i 'saphana|SAPDatabase|SAPInstance|SAPStartsrv|sapcontrol|saphostctrl' /var/log/messages | tail -1000"
-        plugin_command "egrep -i 'saphana|SAPDatabase|SAPInstance|SAPStartsrv|sapcontrol|saphostctrl' /var/log/pacemaker.log | tail -1000"
+        plugin_command "grep -E -i 'saphana|SAPDatabase|SAPInstance|SAPStartsrv|sapcontrol|saphostctrl' /var/log/messages | tail -1000"
+        if ! [ $RELEASE == 'VERSION="11.4"' ]; then
+                plugin_command "grep -E -i 'saphana|SAPDatabase|SAPInstance|SAPStartsrv|sapcontrol|saphostctrl' /var/log/pacemaker.log | tail -1000"
         fi
-
