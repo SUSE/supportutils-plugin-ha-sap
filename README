@@ -3,7 +3,7 @@
 SLES for SAP plugin for supportconfig
 
 Instructions: 
-1. Extract and copy script "suse_SAP" to /usr/lib/supportconfig/plugins directory and create the "plugins" directory if it doesn't exist.
+1. Extract and copy script "suse_SAP" to /usr/lib/supportconfig/plugins directory and create the "plugins" directory if it doesn't exist. (file needs to be executable)
 2. When you run the normal supportconfig, it will run any plugins that it finds in these directories.
 
 * If you want to run minimal supportconfig but also run suse_SAP plugin script, you can run the following.
