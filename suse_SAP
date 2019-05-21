@@ -71,7 +71,7 @@ else
 	echo -e  "OS Release: $RELEASE \n"
 	plugin_command "systemctl status sapconf"
 	plugin_command "systemctl status tuned.service"
-	plugin_command "tuned-adm list | grep Current "
+	plugin_command "tuned-adm active "
 	plugin_command "saptune solution list "
 	plugin_command "saptune note list "
 fi 
