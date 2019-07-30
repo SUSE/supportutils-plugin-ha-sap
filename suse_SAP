@@ -1,14 +1,14 @@
 #!/bin/bash
 #############################################################
-# Name:        Supportconfig Plugin for SUSE SAP HANA
+# Name:        Supportconfig Plugin for SUSE SAP 
 # Description: Gathers important troubleshooting information
-#              about a SUSE SAP HANA Configurations
+#              about a SUSE SAP HANA/NetWeaver configurations
 # License:     GPLv2
 # Author:      Jason Record <jason.record@suse.com> Rich Brunt <rich.brunt@suse.com> Colin Hamilton <colin.hamilton@suse.com>
-# Modified:    2019 Jan
+# Modified:    2019 July 30
 #############################################################
 
-SVER='1.0.3'
+SVER='1.0.4'
 RCFILE="/usr/lib/supportconfig/resources/scplugin.rc"
 TITLE="SUSE SAP"
 INSTANCES=()
@@ -62,18 +62,17 @@ done
 ## SAP BASIC Tuning ##
 section_header "SAP Tuning information"
 
-RELEASE=$(cat /etc/os-release | grep VERSION=)
+RELEASE=$(grep ^VERSION= /etc/os-release)
+echo -e  "OS Release: $RELEASE \n"
 if [ $RELEASE == 'VERSION="11.4"' ]; then
-	echo -e  "OS Release: $RELEASE \n"
-	plugin_command " chkconfig -l boot.sapconf "
-	plugin_command "cat /etc/sysconfig/sapconf | grep -v \^#"
+	plugin_command "chkconfig -l boot.sapconf"
+	plugin_command "cat /etc/sysconfig/sapconf | grep -v '^\s*\#\|^$'"
 else 
-	echo -e  "OS Release: $RELEASE \n"
 	plugin_command "systemctl status sapconf"
 	plugin_command "systemctl status tuned.service"
-	plugin_command "tuned-adm active "
-	plugin_command "saptune solution list "
-	plugin_command "saptune note list "
+	plugin_command "tuned-adm active"
+	plugin_command "saptune solution list"
+	plugin_command "saptune note list"
 fi 
 
 ## SAP Host Agent ##
@@ -82,8 +81,8 @@ plugin_command "/usr/sap/hostctrl/exe/saphostexec -version"
 plugin_command "/usr/sap/hostctrl/exe/saphostexec -status"
 plugin_command "/usr/bin/cat /usr/sap/sapservices"
 
-## SAP Exit Code Index
-SAPCONTROLEXIT="sapcontrol return codes:\n 
+## SAP Exit Code Index ##
+SAPCONTROLEXIT="sapcontrol return codes: \n 
   0  Last webmethod call successful \n 
   1  Last webmethod call failed, invalid parameter \n 
   2  StartWait, StopWait, WaitforStarted, WaitforStopped, RestartServiceWait timed out \n 
@@ -95,16 +94,16 @@ SAPHDB1="lanscapeHostConfiguration.py return codes: \n
   2  Warning \n 
   3  Info \n 
   4  OK \n 
-  5  Ignore \n "
-SAPHDB2="systemReplicationStatus.py return codes:\n 
+  5  Ignore \n"
+SAPHDB2="systemReplicationStatus.py return codes: \n 
   10  NoHSR \n
   11  Error \n 
-  12  Unknown ( Normal rc for Secondaray/slave node )\n 
+  12  Unknown ( Normal rc for Secondaray/slave node ) \n 
   13  Initializing \n 
   14  Syncing \n 
   15  Active ( Desired state for Primary/master node ) \n"
 
-# Get SAP Instances using saphostctrl function.  Relies on sap interface to be working. 
+# Get SAP Instances using saphostctrl function. Relies on sap interface to be working. 
 SAP_CONFIG="sap_config.txt"
 /usr/sap/hostctrl/exe/saphostctrl -function ListInstances | awk '{print $4,$6}' &> $SAP_CONFIG
 
