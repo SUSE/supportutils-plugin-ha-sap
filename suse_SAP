@@ -35,14 +35,14 @@ validate_rpm_if_installed() {
 ## Docs  ##
 section_header "Referencee Documentation"
 echo -e "Current Documentation:
-\thttps://documentation.suse.com/en-us/sles-sap/15-SP1/
+\t https://documentation.suse.com/en-us/sles-sap/15-SP1/
 Tuning: 
-\thttps://documentation.suse.com/sles-sap/12-SP4/single-html/SLES4SAP-guide/#sec-saptune
-Best Practice Guides: 
-\tSAP HANA SR Performance Optimized: SLES 12sp1+:\t https://www.suse.com/media/white-paper/suse_linux_enterprise_server_for_sap_applications_12_sp1.pdf 
-\tSAP HANA SR Performance Optimized: SLES 11sp4:\t https://www.suse.com/media/guide/sap_hana_sr_performance_optimized_scenario_11_sp4.pdf 
-\tSAP HANA SR Cost Optimized: SLES 12sp1+:\t https://www.suse.com/media/white-paper/sap_hana_sr_cost_optimized_scenario_12_sp1.pdf  
-\tSAP NetWeaver High Availability Cluster 7.40 Setup Guide:\t https://www.suse.com/media/white-paper/sap_netweaver_availability_cluster_740_setup_guide.pdf
+\t https://documentation.suse.com/sles-sap/12-SP4/single-html/SLES4SAP-guide/#sec-saptune
+Best Practice Guides: \t https://documentation.suse.com/sbp/all/
+\tSAP HANA SR Performance Optimized Scale up:\t https://documentation.suse.com/sbp/all/pdf/SLES4SAP-hana-sr-guide-PerfOpt-12_color_en.pdf 
+\tSAP HANA SR Performance Optimized: Scale out:\t https://documentation.suse.com/sbp/all/pdf/SLES4SAP-hana-scaleOut-PerfOpt-12_color_en.pdf
+\tSAP HANA SR Cost Optimized: SLES 12sp1+:\t https://www.suse.com/media/white-paper/sap_hana_sr_cost_optimized_scenario_12_sp1.pdf?_ga=2.126091149.1277468344.1580824358-887832554.1512142213  
+\tSAP S/4 HANA - Enqueue Replication High Availability Cluster Guide:\t https://documentation.suse.com/sbp/all/pdf/SAP_S4HA10_SetupGuide-SLE12_color_en.pdf
 "
 #############################################################
 section_header "Supportconfig Plugin for $TITLE, v${SVER}"
