@@ -53,6 +53,7 @@ tuned
 saptune
 sap-suse-cluster-connector
 sap_suse_cluster_connector
+SAPHanaSR-ScaleOut
 "
 
 for THISRPM in $RPMLIST; do
@@ -71,8 +72,10 @@ else
 	plugin_command "systemctl status sapconf"
 	plugin_command "systemctl status tuned.service"
 	plugin_command "tuned-adm active"
+	plugin_command "saptune version"
 	plugin_command "saptune solution list"
 	plugin_command "saptune note list"
+	plugin_command "saptune solution verify"
 fi 
 
 ## SAP Host Agent ##
@@ -118,8 +121,6 @@ done < $SAP_CONFIG
 rm -r $SAP_CONFIG
 
 section_header "$TITLE Troubleshooting Commands"
-plugin_command "SAPHanaSR-showAttr"
-echo "RETURN CODE: $?"; echo
 plugin_command "/usr/sap/hostctrl/exe/saphostctrl -function ListInstances"
 
 # Run through each instance detected and display information about it
@@ -137,6 +138,10 @@ do
 	plugin_command "su - ${ELEMENT[${ADM}]} -c 'HDB version'"
 	if [[ $? == 0 ]]; then
 		echo "RETURN CODE: $?"; echo
+		plugin_command "SAPHanaSR-monitor"
+		echo "RETURN_CODE: $?"; echo 
+		plugin_command "SAPHanaSR-showAttr"
+		echo "RETURN_CODE: $?"; echo 
 		plugin_command "su - ${ELEMENT[${ADM}]} -c 'hdbnsutil -sr_state'"
 		echo "RETURN CODE: $?"; echo
 		plugin_command "su - ${ELEMENT[${ADM}]} -c 'HDBSettings.sh landscapeHostConfiguration.py --sapcontrol=1'"
@@ -151,6 +156,7 @@ do
 		echo "RETURN CODE: $?"; echo
 		HDBEXIST=false
 	fi
+	plugin_command "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function GetSystemInstanceList'"
 	plugin_command "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function GetProcessList'"
 	echo "RETURN CODE: $?"; echo -e $SAPCONTROLEXIT; echo
 
@@ -175,6 +181,10 @@ do
                 echo "RETURN CODE: $?"; echo 
         fi
 done
+## Adding some basic cluster commands.  Refer to ha.txt in supportconfig for additional ##
+section_header "$TITLE Basic Cluster Configuration"
+	plugin_command "crm_mon -A -r -1"
+	plugin_command "crm configure show"
 
 section_header "$TITLE Log Files"
         plugin_command "grep -E -i 'saphana|SAPDatabase|SAPInstance|SAPStartsrv|sapcontrol|saphostctrl' /var/log/messages | tail -1000"
