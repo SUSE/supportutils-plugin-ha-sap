@@ -19,9 +19,9 @@ AFP APPARMOR AUDIT AUTOFS BOOT BTRFS DAEMONS CIFS CIMOM CRASH CRON DFS DHCP DISK
 
   Example: `supportconfig -x OFILES,PROC`
 
-* If you want to run minimal supportconfig but also run suse_SAP plugin script.
+* If you want to run minimal supportconfig with HA and suse_SAP plugin script.
 
-  Example: `supportconfig -i psuse_SAP`
+  Example: `supportconfig -i psuse_SAP,HA`
   
 * To combine the options to exclude `openfiles` and `proc` and to run minimal gathering with the suse_SAP plugin.
 
