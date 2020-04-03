@@ -4,25 +4,18 @@ SLES for SAP plugin for supportconfig
 
 This project is currenlty development, there are not any ready to use pkgs. 
 
-
-# Rpm and release:
+# Install, rpm and release:
 
 For rpms pkg have look here: 
 
 - devel: https://build.opensuse.org/package/show/network:ha-clustering:Unstable/supportutils-plugin-ha-sap
 - stable:  https://build.opensuse.org/package/show/network:ha-clustering:Stable/supportutils-plugin-ha-sap 
 
+# Functionality:
 
-
-
-### Manual installation
-
-1. Extract and copy script [suse_SAP](suse_SAP) to `/usr/lib/supportconfig/plugins` directory.
-   - Create the `plugins` directory if it does not exist
-2. Set `suse_SAP` script to be executable.
-2. When you run the normal supportconfig, it will run any plugins that it finds in these directories.
-
-Supportconfig will create a `nts_*.tbz` file in `/var/log/ directory`. When the supportconfig tarball is extracted, the plugin output will be called `plugin-suse_SAP.txt`
+This is a plugin for the supportconfig tool.
+Supportconfig will create a `nts_*.tbz` file in `/var/log/ directory`.
+ When the supportconfig tarball is extracted, the plugin output will be called `plugin-suse_SAP.txt`
 
 You can run `supportconfig -F` to see list of keywords which can be used in the `-i` option below. 
 Example:
