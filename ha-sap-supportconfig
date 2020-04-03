@@ -4,8 +4,6 @@
 # Description: Gathers important troubleshooting information
 #              about a SUSE SAP HANA/NetWeaver configurations
 # License:     GPLv2
-# Author:      Jason Record <jason.record@suse.com> Rich Brunt <rich.brunt@suse.com> Colin Hamilton <colin.hamilton@suse.com>
-# Modified:    2019 July 30
 #############################################################
 
 SVER='1.0.4'
