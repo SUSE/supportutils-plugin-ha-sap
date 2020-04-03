@@ -1,6 +1,21 @@
 SLES for SAP plugin for supportconfig
 
-### Instructions:
+# Project status:
+
+This project is currenlty development, there are not any ready to use pkgs. 
+
+
+# Rpm and release:
+
+For rpms pkg have look here: 
+
+- devel: https://build.opensuse.org/package/show/network:ha-clustering:Unstable/supportutils-plugin-ha-sap
+- stable:  https://build.opensuse.org/package/show/network:ha-clustering:Stable/supportutils-plugin-ha-sap 
+
+
+
+
+### Manual installation
 
 1. Extract and copy script [suse_SAP](suse_SAP) to `/usr/lib/supportconfig/plugins` directory.
    - Create the `plugins` directory if it does not exist
