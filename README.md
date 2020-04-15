@@ -15,22 +15,22 @@ For rpms pkg have look here:
 
 This is a plugin for the supportconfig tool.
 Supportconfig will create a `nts_*.tbz` file in `/var/log/ directory`.
- When the supportconfig tarball is extracted, the plugin output will be called `plugin-suse_SAP.txt`
+ When the supportconfig tarball is extracted, the plugin output will be called `plugin-ha_sap_supportconfig.txt`
 
 You can run `supportconfig -F` to see list of keywords which can be used in the `-i` option below. 
 Example:
 ```
 supportconfig -F
-AFP APPARMOR AUDIT AUTOFS BOOT BTRFS DAEMONS CIFS CIMOM CRASH CRON DFS DHCP DISK DNS DOCKER DRBD DSFW EDIR ENV ETC EVMS HA HAPROXY HISTORY IB IMAN ISCSI KVM LDAP LUM LVM LXC MEM MOD MPIO NCP NCS NET NFS NIT NSS NTP OCFS2 OES OFILES PAM PRINT PROC PROXY SAM SAR SLERT SLP SMT SMART SMB SMS SRAID SSH SSSD SYSCONFIG SYSFS UDEV UFILES UP UPD WEB X XEN aEDIR aFSLIST aLOGS aMINDISK aMAXYAST aRPMV aSLP aLOCAL_ONLY psuse_SAP
+AFP APPARMOR AUDIT AUTOFS BOOT BTRFS DAEMONS CIFS CIMOM CRASH CRON DFS DHCP DISK DNS DOCKER DRBD DSFW EDIR ENV ETC EVMS HA HAPROXY HISTORY IB IMAN ISCSI KVM LDAP LUM LVM LXC MEM MOD MPIO NCP NCS NET NFS NIT NSS NTP OCFS2 OES OFILES PAM PRINT PROC PROXY SAM SAR SLERT SLP SMT SMART SMB SMS SRAID SSH SSSD SYSCONFIG SYSFS UDEV UFILES UP UPD WEB X XEN aEDIR aFSLIST aLOGS aMINDISK aMAXYAST aRPMV aSLP aLOCAL_ONLY pha_sap_supportconfig
 ```
 * Often times the `openfiles.txt` and `proc.txt` gathering process can take awhile and the output is very large. You can exclude these options by using the `-x` keyword options.
 
   Example: `supportconfig -x OFILES,PROC`
 
-* If you want to run minimal supportconfig with HA and suse_SAP plugin script.
+* If you want to run minimal supportconfig with `HA` and `ha_sap_supportconfig` plugin script.
 
-  Example: `supportconfig -i psuse_SAP,HA`
+  Example: `supportconfig -i pha_sap_supportconfig,HA`
   
-* To combine the options to exclude `openfiles` and `proc` and to run minimal gathering with the suse_SAP plugin.
+* To combine the options to exclude `openfiles` and `proc` and to run minimal gathering with the `ha_sap_supportconfig` plugin.
 
-  Example: `supportconfig -x OFILES,PROC -i psuse_SAP`
+  Example: `supportconfig -x OFILES,PROC -i pha_sap_supportconfig`
