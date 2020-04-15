@@ -9,7 +9,6 @@ This project is currenlty development, there are not any ready to use pkgs.
 For rpms pkg have look here: 
 
 - devel: https://build.opensuse.org/package/show/network:ha-clustering:Unstable/supportutils-plugin-ha-sap
-- stable:  https://build.opensuse.org/package/show/network:ha-clustering:Stable/supportutils-plugin-ha-sap 
 
 # Functionality:
 
