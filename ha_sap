@@ -182,7 +182,7 @@ done
 ## Adding some basic cluster commands.  Refer to ha.txt in supportconfig for additional ##
 section_header "$TITLE Basic Cluster Configuration"
 	plugin_command "crm_mon -A -r -1"
-	plugin_command "crm configure show"
+	plugin_command "crm configure show obscure:passw*"
 
 section_header "$TITLE Log Files"
         plugin_command "grep -E -i 'saphana|SAPDatabase|SAPInstance|SAPStartsrv|sapcontrol|saphostctrl' /var/log/messages | tail -1000"
