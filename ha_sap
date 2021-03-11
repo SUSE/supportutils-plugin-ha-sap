@@ -39,8 +39,9 @@ Tuning:
 Best Practice Guides: \t https://documentation.suse.com/sbp/all/
 \tSAP HANA SR Performance Optimized Scale up:\t https://documentation.suse.com/sbp/all/pdf/SLES4SAP-hana-sr-guide-PerfOpt-12_color_en.pdf 
 \tSAP HANA SR Performance Optimized: Scale out:\t https://documentation.suse.com/sbp/all/pdf/SLES4SAP-hana-scaleOut-PerfOpt-12_color_en.pdf
-\tSAP HANA SR Cost Optimized: SLES 12sp1+:\t https://www.suse.com/media/white-paper/sap_hana_sr_cost_optimized_scenario_12_sp1.pdf?_ga=2.126091149.1277468344.1580824358-887832554.1512142213  
-\tSAP S/4 HANA - Enqueue Replication High Availability Cluster Guide:\t https://documentation.suse.com/sbp/all/pdf/SAP_S4HA10_SetupGuide-SLE12_color_en.pdf
+\tSAP HANA SR Cost Optimized: SLES 12sp1+:\t https://documentation.suse.com/sbp/all/pdf/SLES4SAP-hana-sr-guide-CostOpt-12_color_en.pdf
+\tENSA1 SAP ABAP Standalone Enqueue - https://documentation.suse.com/sbp/all/pdf/SAP_NW740_SLE12_SetupGuide_color_en.pdf
+\tENSA2 SAP S/4 HANA - Enqueue Replication High Availability Cluster Guide:\t https://documentation.suse.com/sbp/all/pdf/SAP_S4HA10_SetupGuide-SLE12_color_en.pdf
 "
 #############################################################
 section_header "Supportconfig Plugin for $TITLE, v${SVER}"
@@ -104,6 +105,13 @@ SAPHDB2="systemReplicationStatus.py return codes: \n
   14  Syncing \n 
   15  Active ( Desired state for Primary/master node ) \n"
 
+ENSAMSG1="## ENSA1 ##  (Default Standalone Enqueue Server) \n
+    Service names: 'msg_server', 'enserver', and 'enrepserver' \n
+    Process names: 'ms.sap*', 'er.sap*' \n"
+ENSAMSG2="## ENSA2 ##  (Default starting with S/4HANA ABAP Platform 1809) \n
+    Service names: 'msg_server', 'enq_server', and 'enq_replicator' \n
+    Process names: 'ms.sap*', 'enq.sap*', 'enqr.sap*' \n"
+
 # Get SAP Instances using saphostctrl function. Relies on sap interface to be working. 
 SAP_CONFIG="sap_config.txt"
 /usr/sap/hostctrl/exe/saphostctrl -function ListInstances | awk '{print $4,$6}' &> $SAP_CONFIG
@@ -120,6 +128,7 @@ rm -r $SAP_CONFIG
 
 section_header "$TITLE Troubleshooting Commands"
 plugin_command "/usr/sap/hostctrl/exe/saphostctrl -function ListInstances"
+plugin_command "ps -U $SIDADM -f"
 
 # Run through each instance detected and display information about it
 INST_CNT=1
@@ -156,7 +165,7 @@ do
 	fi
 	plugin_command "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function GetSystemInstanceList'"
 	plugin_command "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function GetProcessList'"
-	echo "RETURN CODE: $?"; echo -e $SAPCONTROLEXIT; echo
+	echo "RETURN CODE: $?"; echo -e $SAPCONTROLEXIT; echo; echo -e $ENSAMSG1; echo -e $ENSAMSG2
 
 	INSTANCE_PROFILE_DIR=$(su - ${ELEMENT[${ADM}]} -c 'cdpro && pwd' 2>/dev/null)
 	INSTANCE_CONFIG_DIR=$(su - ${ELEMENT[${ADM}]} -c 'cdcoc && pwd' 2>/dev/null)
@@ -185,7 +194,7 @@ section_header "$TITLE Basic Cluster Configuration"
 	plugin_command "crm configure show obscure:passw*"
 
 section_header "$TITLE Log Files"
-        plugin_command "grep -E -i 'saphana|SAPDatabase|SAPInstance|SAPStartsrv|sapcontrol|saphostctrl' /var/log/messages | tail -1000"
+        plugin_command "grep -E -i 'saphana|SAPDatabase|SAPInstance|SAPStartsrv|sapcontrol|saphostctrl|sap_suse_cluster_connector' /var/log/messages | tail -1000"
         if ! [ $RELEASE == 'VERSION="11.4"' ]; then
                 plugin_command "grep -E -i 'saphana|SAPDatabase|SAPInstance|SAPStartsrv|sapcontrol|saphostctrl' /var/log/pacemaker.log | tail -1000"
         fi
