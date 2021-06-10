@@ -2,11 +2,13 @@ SLES for SAP plugin for supportconfig
 
 # Project status:
 
-This project is currenlty development, there are not any ready to use pkgs. 
+This project is currently released to SLE12 and SLE15 Codestream.
 
 # Install, rpm and release:
 
-For rpms pkg have look here: 
+Released rpms can be found in the official repositories.
+
+For development related rpms pkg have a look here:
 
 - devel: https://build.opensuse.org/package/show/network:ha-clustering:Unstable/supportutils-plugin-ha-sap
 
