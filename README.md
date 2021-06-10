@@ -15,7 +15,7 @@ For development related rpms pkg have a look here:
 # Functionality:
 
 This is a plugin for the supportconfig tool.
-Supportconfig will create a `nts_*.tbz` file in `/var/log/ directory`.
+Supportconfig will create a `scc_<servername>_<date>*.txz` file in `/var/log/ directory`.
 When the supportconfig tarball is extracted, the plugin output will be called `plugin-ha_sap.txt`
 
 You can run `supportconfig -F` to see list of keywords which can be used in the `-i` option below. 
