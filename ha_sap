@@ -33,9 +33,12 @@ validate_rpm_if_installed() {
 ## Docs  ##
 section_header "Referencee Documentation"
 echo -e "Current Documentation:
+\t https://documentation.suse.com/en-us/sles-sap/15-SP2/
 \t https://documentation.suse.com/en-us/sles-sap/15-SP1/
+
 Tuning: 
-\t https://documentation.suse.com/sles-sap/12-SP4/single-html/SLES4SAP-guide/#sec-saptune
+\t https://documentation.suse.com/sles-sap/12-SP5/single-html/SLES4SAP-guide/#sec-saptune
+
 Best Practice Guides: \t https://documentation.suse.com/sbp/all/
 \tSAP HANA SR Performance Optimized Scale up:\t https://documentation.suse.com/sbp/all/pdf/SLES4SAP-hana-sr-guide-PerfOpt-12_color_en.pdf 
 \tSAP HANA SR Performance Optimized: Scale out:\t https://documentation.suse.com/sbp/all/pdf/SLES4SAP-hana-scaleOut-PerfOpt-12_color_en.pdf
@@ -58,6 +61,10 @@ SAPHanaSR-ScaleOut
 for THISRPM in $RPMLIST; do
 	validate_rpm_if_installed $THISRPM
 done
+## Authentication ## 
+section_header "Authentication information"
+        plugin_command "grep -v '^\s*\#\|^$' /etc/nsswitch.conf | head -5"
+        plugin_command "grep -E "^[[:alnum:]]{3}adm:" /etc/passwd"
 
 ## SAP BASIC Tuning ##
 section_header "SAP Tuning information"
@@ -70,17 +77,28 @@ if [ $RELEASE == 'VERSION="11.4"' ]; then
 else 
 	plugin_command "systemctl status sapconf"
 	plugin_command "systemctl status tuned.service"
-	plugin_command "tuned-adm active"
-	plugin_command "saptune version"
-	plugin_command "saptune solution list"
-	plugin_command "saptune note list"
-	plugin_command "saptune solution verify"
+	if [ $? -eq 0 ]
+          then
+		plugin_command "tuned-adm active"
+		plugin_command "saptune version"
+		plugin_command "saptune solution list"
+		plugin_command "saptune note list"
+		plugin_command "saptune solution verify"
+	  else
+                echo "WARNING: tuned.service or saptune not configured"
+        fi
+	
 fi 
 
 ## SAP Host Agent ##
 section_header "SAP Host Agent Information"
-plugin_command "/usr/sap/hostctrl/exe/saphostexec -version"
+plugin_command "/usr/sap/hostctrl/exe/saphostexec -version |tail -30"
 plugin_command "/usr/sap/hostctrl/exe/saphostexec -status"
+     if [ $? -eq 1 ]
+     then
+        echo -e "ERROR: Please make sure 'sapinit.service' is enabled and running. \n"
+     fi
+plugin_command "systemctl status sapinit"
 plugin_command "/usr/bin/cat /usr/sap/sapservices"
 
 ## SAP Exit Code Index ##
@@ -143,6 +161,7 @@ do
 	section_header "$TITLE Instance $INST_CNT of ${#INSTANCES[@]}: ${ELEMENT[${LABEL}]}"
 	HDBEXIST=true
 	plugin_command "su - ${ELEMENT[${ADM}]} -c 'HDB version'"
+	plugin_command "/usr/bin/id ${ELEMENT[${ADM}]}"
 	if [[ $? == 0 ]]; then
 		echo "RETURN CODE: $?"; echo
 		plugin_command "SAPHanaSR-monitor"
