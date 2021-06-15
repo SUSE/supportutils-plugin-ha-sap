@@ -4,6 +4,10 @@ SLES for SAP plugin for supportconfig
 
 This project is currently released to SLE12 and SLE15 Codestream.
 
+# Additional information:
+
+Additional information can be found in the TID 000020279 https://www.suse.com/de-de/support/kb/doc/?id=000020279
+
 # Install, rpm and release:
 
 Released rpms can be found in the official repositories.
