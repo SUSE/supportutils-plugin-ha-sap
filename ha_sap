@@ -215,5 +215,5 @@ section_header "$TITLE Basic Cluster Configuration"
 section_header "$TITLE Log Files"
         plugin_command "grep -E -i 'saphana|SAPDatabase|SAPInstance|SAPStartsrv|sapcontrol|saphostctrl|sap_suse_cluster_connector' /var/log/messages | tail -1000"
         if ! [ $RELEASE == 'VERSION="11.4"' ]; then
-                plugin_command "grep -E -i 'saphana|SAPDatabase|SAPInstance|SAPStartsrv|sapcontrol|saphostctrl' /var/log/pacemaker/pacemaker.log | tail -1000"
+                plugin_command "find /var/log/ -name pacemaker.log -exec grep -E -i 'saphana|SAPDatabase|SAPInstance|SAPStartsrv|sapcontrol|saphostctrl' {} \; | tail -1000"
         fi
