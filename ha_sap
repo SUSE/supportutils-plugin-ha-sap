@@ -33,6 +33,8 @@ validate_rpm_if_installed() {
 ## Docs  ##
 section_header "Referencee Documentation"
 echo -e "Current Documentation:
+\t https://documentation.suse.com/en-us/sles-sap/15-SP4/
+\t https://documentation.suse.com/en-us/sles-sap/15-SP3/
 \t https://documentation.suse.com/en-us/sles-sap/15-SP2/
 \t https://documentation.suse.com/en-us/sles-sap/15-SP1/
 
@@ -64,7 +66,10 @@ done
 ## Authentication ## 
 section_header "Authentication information"
         plugin_command "grep -v '^\s*\#\|^$' /etc/nsswitch.conf | head -5"
-        plugin_command "grep -E "^[[:alnum:]]{3}adm:" /etc/passwd"
+	plugin_command "grep -E '^[[:alnum:]]{3}adm:' /etc/passwd"
+        plugin_command "grep -E '^sap' /etc/passwd"
+        plugin_command "grep -E '^[[:alnum:]]{3}adm:' /etc/group"
+        plugin_command "grep -E '^sap' /etc/group"
 
 ## SAP BASIC Tuning ##
 section_header "SAP Tuning information"
