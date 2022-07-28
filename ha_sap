@@ -69,7 +69,7 @@ section_header "Authentication information"
 	plugin_command "grep -E '^[[:alnum:]]{3}adm:' /etc/passwd"
         plugin_command "grep -E '^sap' /etc/passwd"
         plugin_command "grep -E '^[[:alnum:]]{3}adm:' /etc/group"
-        plugin_command "grep -E '^sap' /etc/group"
+        plugin_command "grep -E -e '^sap' -e '^sdba:' -e '^dba:' /etc/group"
 
 ## SAP BASIC Tuning ##
 section_header "SAP Tuning information"
