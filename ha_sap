@@ -65,11 +65,11 @@ for THISRPM in $RPMLIST; do
 done
 ## Authentication ## 
 section_header "Authentication information"
-        plugin_command "grep -v '^\s*\#\|^$' /etc/nsswitch.conf | head -5"
+	plugin_command "grep -v '^\s*\#\|^$' /etc/nsswitch.conf | head -5"
 	plugin_command "grep -E '^[[:alnum:]]{3}adm:' /etc/passwd"
-        plugin_command "grep -E '^sap' /etc/passwd"
-        plugin_command "grep -E '^[[:alnum:]]{3}adm:' /etc/group"
-        plugin_command "grep -E -e '^sap' -e '^sdba:' -e '^dba:' /etc/group"
+	plugin_command "grep -E '^sap' /etc/passwd"
+	plugin_command "grep -E '^[[:alnum:]]{3}adm:' /etc/group"
+	plugin_command "grep -E -e '^sap' -e '^sdba:' -e '^dba:' /etc/group"
 
 ## SAP BASIC Tuning ##
 section_header "SAP Tuning information"
