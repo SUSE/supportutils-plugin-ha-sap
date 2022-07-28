@@ -21,6 +21,10 @@ For development related rpms pkg have a look here:
 This is a plugin for the supportconfig tool.
 Supportconfig will create a `scc_<servername>_<date>*.txz` file in `/var/log/ directory`.
 When the supportconfig tarball is extracted, the plugin output will be called `plugin-ha_sap.txt`
+This plugin will collect informations related to SAP HA environmen:
+* Searching for needed local groups and users
+* State of sapconf and saptuned
+* Get SAP Instances using saphostctrl function. Relies on sap interface to be working.
 
 You can run `supportconfig -F` to see list of keywords which can be used in the `-i` option below. 
 Example:
