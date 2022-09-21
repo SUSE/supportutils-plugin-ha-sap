@@ -84,8 +84,8 @@ else
 	plugin_command "systemctl status tuned.service"
 	if [ $? -eq 0 ]
 	then
-		plugin_command "tuned-adm active"
 		noSaptuneProfile="true"
+		plugin_command "tuned-adm active"
 		if [ $? -eq 0 ]; then
 			profile=$(cat /etc/tuned/active_profile)
 			if [ "$profile" == "saptune" ]; then
