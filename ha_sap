@@ -83,16 +83,36 @@ else
 	plugin_command "systemctl status sapconf"
 	plugin_command "systemctl status tuned.service"
 	if [ $? -eq 0 ]
-          then
+	then
 		plugin_command "tuned-adm active"
+		noSaptuneProfile="true"
+		if [ $? -eq 0 ]; then
+			profile=$(cat /etc/tuned/active_profile)
+			if [ "$profile" == "saptune" ]; then
+				plugin_command "saptune version"
+				plugin_command "saptune solution list"
+				plugin_command "saptune note list"
+				plugin_command "saptune solution verify"
+				noSaptuneProfile=""
+			fi
+		fi
+	else
+		noTuned="true"
+        fi
+	plugin_command "systemctl status saptune.service"
+	if [ $? -eq 0 ]; then
 		plugin_command "saptune version"
+		echo -e "HINT: since saptune 3.0 a special saptune supportconfig plugin exists\n"
+		plugin_command "saptune status"
 		plugin_command "saptune solution list"
 		plugin_command "saptune note list"
 		plugin_command "saptune solution verify"
-	  else
-                echo "WARNING: tuned.service or saptune not configured"
-        fi
-	
+	else
+		noSaptune="true"
+	fi
+	if [[ "$noSaptune" == "true"  && ( "$noTuned" == "true" || "$noSaptuneProfile" == "true" ) ]]; then
+		echo "WARNING: tuned.service or saptune not configured"
+	fi
 fi 
 
 ## SAP Host Agent ##
