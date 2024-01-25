@@ -6,7 +6,7 @@
 # License:     GPLv2
 #############################################################
 
-SVER='1.0.4'
+SVER='1.0.5'
 RCFILE="/usr/lib/supportconfig/resources/scplugin.rc"
 TITLE="SUSE SAP"
 INSTANCES=()
@@ -187,6 +187,7 @@ do
 	section_header "$TITLE Instance $INST_CNT of ${#INSTANCES[@]}: ${ELEMENT[${LABEL}]}"
 	HDBEXIST=true
 	plugin_command "su - ${ELEMENT[${ADM}]} -c 'HDB version'"
+	plugin_command "su - ${ELEMENT[${ADM}]} -c 'python --version'"
 	plugin_command "/usr/bin/id ${ELEMENT[${ADM}]}"
 	if [[ $? == 0 ]]; then
 		echo "RETURN CODE: $?"; echo
