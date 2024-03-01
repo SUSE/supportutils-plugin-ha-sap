@@ -30,23 +30,35 @@ validate_rpm_if_installed() {
 	echo
 }
 
+collect_instance_log() {
+	local LFILE
+	for LFILE in "${@}" ; do
+		echo "#==[ instance Log File '$LFILE' ]=============#"
+		echo "# ${LFILE}"
+		cat "${LFILE}"
+		echo "######"
+	done
+}
+
 ## Docs  ##
 section_header "Referencee Documentation"
 echo -e "Current Documentation:
+\t https://documentation.suse.com/en-us/sles-sap/15-SP5/
 \t https://documentation.suse.com/en-us/sles-sap/15-SP4/
 \t https://documentation.suse.com/en-us/sles-sap/15-SP3/
 \t https://documentation.suse.com/en-us/sles-sap/15-SP2/
 \t https://documentation.suse.com/en-us/sles-sap/15-SP1/
 
 Tuning: 
-\t https://documentation.suse.com/sles-sap/12-SP5/single-html/SLES4SAP-guide/#sec-saptune
+\t https:://documentation.suse.com/sles-sap/15-SP5/single-html/SLES-SAP-guide/index.html#cha-tune
 
-Best Practice Guides: \t https://documentation.suse.com/sbp/all/
-\tSAP HANA SR Performance Optimized Scale up:\t https://documentation.suse.com/sbp/all/pdf/SLES4SAP-hana-sr-guide-PerfOpt-12_color_en.pdf 
-\tSAP HANA SR Performance Optimized: Scale out:\t https://documentation.suse.com/sbp/all/pdf/SLES4SAP-hana-scaleOut-PerfOpt-12_color_en.pdf
-\tSAP HANA SR Cost Optimized: SLES 12sp1+:\t https://documentation.suse.com/sbp/all/pdf/SLES4SAP-hana-sr-guide-CostOpt-12_color_en.pdf
-\tENSA1 SAP ABAP Standalone Enqueue - https://documentation.suse.com/sbp/all/pdf/SAP_NW740_SLE12_SetupGuide_color_en.pdf
-\tENSA2 SAP S/4 HANA - Enqueue Replication High Availability Cluster Guide:\t https://documentation.suse.com/sbp/all/pdf/SAP_S4HA10_SetupGuide-SLE12_color_en.pdf
+Best Practice Guides: \t https://documentation.suse.com/sbp/sap/
+\tSAP HANA SR Performance Optimized Scale up:\t https://documentation.suse.com/sbp/sap-15/pdf/SLES4SAP-hana-sr-guide-PerfOpt-15_en.pdf
+\tSAP HANA SR Performance Optimized Scale out:\t https://documentation.suse.com/sbp/sap-15/pdf/SLES4SAP-hana-scaleOut-PerfOpt-15_en.pdf
+\tSAP HANA SR Performance Optimized Scale out Multi-Target:\t https://documentation.suse.com/sbp/sap-15/pdf/SLES4SAP-hana-scaleout-multitarget-perfopt-15_en.pdf
+\tSAP HANA SR Cost Optimized Scale Up:\t https://documentation.suse.com/sbp/sap-15/pdf/SLES4SAP-hana-sr-guide-costopt-15_en.pdf
+\tENSA1 SAP NetWeaver Enqueue Replication:\t https://documentation.suse.com/sbp/sap-15/pdf/SAP-nw740-sle15-setupguide_en.pdf
+\tENSA2 SAP S/4 HANA - Enqueue Replication:\t https://documentation.suse.com/sbp/sap-15/pdf/SAP-S4HA10-setupguide-simplemount-sle15_en.pdf
 "
 #############################################################
 section_header "Supportconfig Plugin for $TITLE, v${SVER}"
@@ -58,6 +70,8 @@ saptune
 sap-suse-cluster-connector
 sap_suse_cluster_connector
 SAPHanaSR-ScaleOut
+resource-agents
+sapstartsrv-resource-agents
 "
 
 for THISRPM in $RPMLIST; do
@@ -126,6 +140,11 @@ plugin_command "/usr/sap/hostctrl/exe/saphostexec -status"
      fi
 plugin_command "systemctl status sapinit"
 plugin_command "/usr/bin/cat /usr/sap/sapservices"
+plugin_command "systemctl status saphostagent.service"
+plugin_command "systemctl status sapping.service"
+plugin_command "systemctl status sappong.service"
+plugin_command "systemctl list-unit-files | grep -i sap"
+plugin_command "systemd-cgls -u SAP.slice"
 
 ## SAP Exit Code Index ##
 SAPCONTROLEXIT="sapcontrol return codes: \n 
@@ -156,25 +175,65 @@ ENSAMSG2="## ENSA2 ##  (Default starting with S/4HANA ABAP Platform 1809) \n
     Service names: 'msg_server', 'enq_server', and 'enq_replicator' \n
     Process names: 'ms.sap*', 'enq.sap*', 'enqr.sap*' \n"
 
+section_header "$TITLE retrieve SAP Instances"
 # Get SAP Instances using saphostctrl function. Relies on sap interface to be working. 
 SAP_CONFIG="sap_config.txt"
-/usr/sap/hostctrl/exe/saphostctrl -function ListInstances | awk '{print $4,$6}' &> $SAP_CONFIG
+if [ -x /usr/sap/hostctrl/exe/saphostctrl ]; then
+	/usr/sap/hostctrl/exe/saphostctrl -function ListInstances | awk '{print $4,$6}' &> $SAP_CONFIG
 
-while read LINE
-do
-	SID=$(echo $LINE | awk '{print $1}')
-	SIDADM="$(tr '[:upper:]' '[:lower:]' <<< $SID)adm"
-	INST=$(echo $LINE | awk '{print $2}')
-	INST_NAME="SID=$SID:InstanceNumber=$INST"
-	INSTANCES+=("${INST_NAME} ${SIDADM} ${SID} ${INST}")
-done < $SAP_CONFIG
-rm -r $SAP_CONFIG
+	while read LINE
+	do
+		SID=$(echo $LINE | awk '{print $1}')
+		SIDADM="$(tr '[:upper:]' '[:lower:]' <<< $SID)adm"
+		INST=$(echo $LINE | awk '{print $2}')
+		INST_NAME="SID=$SID:InstanceNumber=$INST"
+		INSTANCES+=("${INST_NAME} ${SIDADM} ${SID} ${INST}")
+	done < $SAP_CONFIG
+	rm -r $SAP_CONFIG
+fi
+
+if [ -z "$SID" ]; then
+	if [ -x /usr/sap/sapservices ]; then
+		# saphostctrl does not report instances, search for systemd services
+		# or read from /usr/sap/sapservices
+		sapservices=$(systemctl -t service list-unit-files | sed -n 's/\(^SAP.*\).service.*/\1/p')
+		if [ -z "$sapservices" ]; then
+			# no systemd services available, try /usr/sap/sapservices
+			sapservices=$(awk '$1!~/^#/ {print $3}' /usr/sap/sapservices | awk -F= '{print $2}')
+			for s in $sapservices; do
+				# /usr/sap/HA1/SYS/profile/HA1_HDB10_node11
+				service=${s##*/}
+				SID=${service:0:3}
+				SIDADM=${SID,,}adm
+				INST=${service:7:2}
+				INST_NAME="SID=$SID:InstanceNumber=$INST"
+				INSTANCES+=("${INST_NAME} ${SIDADM} ${SID} ${INST}")
+			done
+		else
+			# SAP naming schema for services - SAP<SID>_<INSTNO>.service
+			for service in $sapservices; do
+				# SAPHA1_00
+				SID=${service:3:3}
+				SIDADM=${SID,,}adm
+				INST=${service:7:2}
+				INST_NAME="SID=$SID:InstanceNumber=$INST"
+				INSTANCES+=("${INST_NAME} ${SIDADM} ${SID} ${INST}")
+			done
+		fi
+	else
+		echo -e "ERROR: No SIDs found! \n"
+		
+	fi
+fi
 
 section_header "$TITLE Troubleshooting Commands"
 plugin_command "/usr/sap/hostctrl/exe/saphostctrl -function ListInstances"
-plugin_command "ps -U $SIDADM -f"
+if [ -n "$SIDADM" ]; then
+	plugin_command "ps -U $SIDADM -f"
+fi
 
 # Run through each instance detected and display information about it
+VHOST=$(hostname)
 INST_CNT=1
 LABEL=0
 ADM=1
@@ -209,21 +268,31 @@ do
 		echo "RETURN CODE: $?"; echo
 		HDBEXIST=false
 	fi
+	plugin_command "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function GetStartProfile'"
 	plugin_command "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function GetSystemInstanceList'"
 	plugin_command "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function GetProcessList'"
 	echo "RETURN CODE: $?"; echo -e $SAPCONTROLEXIT; echo; echo -e $ENSAMSG1; echo -e $ENSAMSG2
 
 	INSTANCE_PROFILE_DIR=$(su - ${ELEMENT[${ADM}]} -c 'cdpro && pwd' 2>/dev/null)
 	INSTANCE_CONFIG_DIR=$(su - ${ELEMENT[${ADM}]} -c 'cdcoc && pwd' 2>/dev/null)
-	
 	if [[ -d $INSTANCE_CONFIG_DIR ]] && [[ $HDBEXIST == true ]]; then
-		pconf_files ${INSTANCE_CONFIG_DIR}/global.ini ${INSTANCE_CONFIG_DIR}/nameserver.ini
+		pconf_files ${INSTANCE_CONFIG_DIR}/global.ini ${INSTANCE_CONFIG_DIR}/nameserver.ini ${INSTANCE_CONFIG_DIR}/daemon.ini
 	fi
 	if [[ -d $INSTANCE_PROFILE_DIR ]]; then
 		pconf_files ${INSTANCE_PROFILE_DIR}/${ELEMENT[${SID}]}_*
 	fi
-	 INST_CNT=$[ INST_CNT + 1 ]
-## Adding support for sap-suse-cluster-connector  ##
+	
+	plugin_command "systemctl status SAP${ELEMENT[${SID}]}_${ELEMENT[${NUM}]}.service"
+
+	# SUSE HANA hook script logs
+	# /usr/sap/HA1/HDB10/hanacost1/trace/nameserver_suschksrv.trc
+	lfile=/usr/sap/${ELEMENT[${SID}]}/HDB${ELEMENT[${NUM}]}/${VHOST}/trace/nameserver_suschksrv.trc
+	collect_instance_log ${lfile}
+	# /usr/sap/HA1/HDB10/hanacost1/trace/nameserver_saphanasr_multitarget_hook.trc
+	lfile=/usr/sap/${ELEMENT[${SID}]}/HDB${ELEMENT[${NUM}]}/${VHOST}/trace/nameserver_saphanasr_multitarget_hook.trc
+	collect_instance_log ${lfile}
+
+	## Adding support for sap-suse-cluster-connector  ##
         plugin_command "rpm -qa | grep -E 'sap-suse-cluster-connector|sap_suse_cluster_connector'"
         if [ $? -eq 0 ]; then
                 plugin_command "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function HAGetFailoverConfig'"
@@ -232,7 +301,17 @@ do
                 echo "RETURN CODE: $?"; echo 
                 plugin_command "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function HACheckConfig'"
                 echo "RETURN CODE: $?"; echo 
+
+		# collect instance logs
+		# /usr/sap/EN2/ASCS00/work/sap_suse_cluster_connector.[old|log]
+		lfile=/usr/sap/${ELEMENT[${SID}]}/ASCS${ELEMENT[${NUM}]}/work/sap_suse_cluster_connector.???
+		collect_instance_log ${lfile}
+		# /usr/sap/EN2/ASCS00/work/sapstartsrv.???
+		lfile=/usr/sap/${ELEMENT[${SID}]}/ASCS${ELEMENT[${NUM}]}/work/sapstartsrv.???
+		collect_instance_log ${lfile}
         fi
+
+	 INST_CNT=$[ INST_CNT + 1 ]
 done
 ## Adding some basic cluster commands.  Refer to ha.txt in supportconfig for additional ##
 section_header "$TITLE Basic Cluster Configuration"
