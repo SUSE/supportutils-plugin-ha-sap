@@ -6,9 +6,10 @@
 # License:     GPLv2
 #############################################################
 
-SVER='1.0.5'
-RCFILE="/usr/lib/supportconfig/resources/scplugin.rc"
+SVER='1.0.6'
+RCFILE="/usr/lib/supportconfig/resources/supportconfig.rc"
 TITLE="SUSE SAP"
+LF=plugin-ha_sap.txt
 INSTANCES=()
 
 [ -s $RCFILE ] && . $RCFILE || { echo "ERROR: Initializing resource file: $RCFILE"; exit 1; }
@@ -41,7 +42,7 @@ collect_instance_log() {
 }
 
 ## Docs  ##
-section_header "Referencee Documentation"
+log_entry $LF section "Referencee Documentation"
 echo -e "Current Documentation:
 \t https://documentation.suse.com/en-us/sles-sap/15-SP5/
 \t https://documentation.suse.com/en-us/sles-sap/15-SP4/
@@ -61,8 +62,9 @@ Best Practice Guides: \t https://documentation.suse.com/sbp/sap/
 \tENSA2 SAP S/4 HANA - Enqueue Replication:\t https://documentation.suse.com/sbp/sap-15/pdf/SAP-S4HA10-setupguide-simplemount-sle15_en.pdf
 "
 #############################################################
-section_header "Supportconfig Plugin for $TITLE, v${SVER}"
+log_entry $LF section "Supportconfig Plugin for $TITLE, v${SVER}"
 RPMLIST="
+SAPHanaSR-angi
 SAPHanaSR
 sapconf
 tuned
@@ -78,50 +80,50 @@ for THISRPM in $RPMLIST; do
 	validate_rpm_if_installed $THISRPM
 done
 ## Authentication ## 
-section_header "Authentication information"
-	plugin_command "grep -v '^\s*\#\|^$' /etc/nsswitch.conf | head -5"
-	plugin_command "grep -E '^[[:alnum:]]{3}adm:' /etc/passwd"
-	plugin_command "grep -E '^sap' /etc/passwd"
-	plugin_command "grep -E '^[[:alnum:]]{3}adm:' /etc/group"
-	plugin_command "grep -E -e '^sap' -e '^sdba:' -e '^dba:' /etc/group"
-	plugin_command "grep -E -R -e '[[:alnum:]]{3}adm' -e 'crm_attribute' -e 'SAPHanaSR' /etc/sudoers /etc/sudoers.d/"
+log_entry $LF section "Authentication information"
+	log_cmd $LF "grep -v '^\s*\#\|^$' /etc/nsswitch.conf | head -5"
+	log_cmd $LF "grep -E '^[[:alnum:]]{3}adm:' /etc/passwd"
+	log_cmd $LF "grep -E '^sap' /etc/passwd"
+	log_cmd $LF "grep -E '^[[:alnum:]]{3}adm:' /etc/group"
+	log_cmd $LF "grep -E -e '^sap' -e '^sdba:' -e '^dba:' /etc/group"
+	log_cmd $LF "grep -E -R -e '[[:alnum:]]{3}adm' -e 'crm_attribute' -e 'SAPHanaSR' /etc/sudoers /etc/sudoers.d/"
 
 ## SAP BASIC Tuning ##
-section_header "SAP Tuning information"
+log_entry $LF section "SAP Tuning information"
 
 RELEASE=$(grep ^VERSION= /etc/os-release)
 echo -e  "OS Release: $RELEASE \n"
 if [ $RELEASE == 'VERSION="11.4"' ]; then
-	plugin_command "chkconfig -l boot.sapconf"
-	plugin_command "cat /etc/sysconfig/sapconf | grep -v '^\s*\#\|^$'"
+	log_cmd $LF "chkconfig -l boot.sapconf"
+	log_cmd $LF "cat /etc/sysconfig/sapconf | grep -v '^\s*\#\|^$'"
 else 
-	plugin_command "systemctl status sapconf"
-	plugin_command "systemctl status tuned.service"
+	log_cmd $LF "systemctl status sapconf"
+	log_cmd $LF "systemctl status tuned.service"
 	if [ $? -eq 0 ]
 	then
 		noSaptuneProfile="true"
-		plugin_command "tuned-adm active"
+		log_cmd $LF "tuned-adm active"
 		if [ $? -eq 0 ]; then
 			profile=$(cat /etc/tuned/active_profile)
 			if [ "$profile" == "saptune" ]; then
-				plugin_command "saptune version"
-				plugin_command "saptune solution list"
-				plugin_command "saptune note list"
-				plugin_command "saptune solution verify"
+				log_cmd $LF "saptune version"
+				log_cmd $LF "saptune solution list"
+				log_cmd $LF "saptune note list"
+				log_cmd $LF "saptune solution verify"
 				noSaptuneProfile=""
 			fi
 		fi
 	else
 		noTuned="true"
         fi
-	plugin_command "systemctl status saptune.service"
+	log_cmd $LF "systemctl status saptune.service"
 	if [ $? -eq 0 ]; then
-		plugin_command "saptune version"
+		log_cmd $LF "saptune version"
 		echo -e "HINT: since saptune 3.0 a special saptune supportconfig plugin exists\n"
-		plugin_command "saptune status"
-		plugin_command "saptune solution list"
-		plugin_command "saptune note list"
-		plugin_command "saptune solution verify"
+		log_cmd $LF "saptune status"
+		log_cmd $LF "saptune solution list"
+		log_cmd $LF "saptune note list"
+		log_cmd $LF "saptune solution verify"
 	else
 		noSaptune="true"
 	fi
@@ -131,20 +133,20 @@ else
 fi 
 
 ## SAP Host Agent ##
-section_header "SAP Host Agent Information"
-plugin_command "/usr/sap/hostctrl/exe/saphostexec -version |tail -30"
-plugin_command "/usr/sap/hostctrl/exe/saphostexec -status"
+log_entry $LF section "SAP Host Agent Information"
+log_cmd $LF "/usr/sap/hostctrl/exe/saphostexec -version |tail -30"
+log_cmd $LF "/usr/sap/hostctrl/exe/saphostexec -status"
      if [ $? -eq 1 ]
      then
         echo -e "ERROR: Please make sure 'sapinit.service' is enabled and running. \n"
      fi
-plugin_command "systemctl status sapinit"
-plugin_command "/usr/bin/cat /usr/sap/sapservices"
-plugin_command "systemctl status saphostagent.service"
-plugin_command "systemctl status sapping.service"
-plugin_command "systemctl status sappong.service"
-plugin_command "systemctl list-unit-files | grep -i sap"
-plugin_command "systemd-cgls -u SAP.slice"
+log_cmd $LF "systemctl status sapinit"
+log_cmd $LF "/usr/bin/cat /usr/sap/sapservices"
+log_cmd $LF "systemctl status saphostagent.service"
+log_cmd $LF "systemctl status sapping.service"
+log_cmd $LF "systemctl status sappong.service"
+log_cmd $LF "systemctl list-unit-files | grep -i sap"
+log_cmd $LF "systemd-cgls -u SAP.slice"
 
 ## SAP Exit Code Index ##
 SAPCONTROLEXIT="sapcontrol return codes: \n 
@@ -175,7 +177,7 @@ ENSAMSG2="## ENSA2 ##  (Default starting with S/4HANA ABAP Platform 1809) \n
     Service names: 'msg_server', 'enq_server', and 'enq_replicator' \n
     Process names: 'ms.sap*', 'enq.sap*', 'enqr.sap*' \n"
 
-section_header "$TITLE retrieve SAP Instances"
+log_entry $LF section "$TITLE retrieve SAP Instances"
 # Get SAP Instances using saphostctrl function. Relies on sap interface to be working. 
 SAP_CONFIG="sap_config.txt"
 if [ -x /usr/sap/hostctrl/exe/saphostctrl ]; then
@@ -226,10 +228,10 @@ if [ -z "$SID" ]; then
 	fi
 fi
 
-section_header "$TITLE Troubleshooting Commands"
-plugin_command "/usr/sap/hostctrl/exe/saphostctrl -function ListInstances"
+log_entry $LF section "$TITLE Troubleshooting Commands"
+log_cmd $LF "/usr/sap/hostctrl/exe/saphostctrl -function ListInstances"
 if [ -n "$SIDADM" ]; then
-	plugin_command "ps -U $SIDADM -f"
+	log_cmd $LF "ps -U $SIDADM -f"
 fi
 
 # Run through each instance detected and display information about it
@@ -243,46 +245,46 @@ for INSTANCE in "${INSTANCES[@]}"
 do
 	# take the INSTANCE variable and turn it into a new array called ELEMENT. Rather than refer to the items in the array by their numeric placement the above 4 variables will be used as reference.
 	read -r -a ELEMENT <<< $INSTANCE
-	section_header "$TITLE Instance $INST_CNT of ${#INSTANCES[@]}: ${ELEMENT[${LABEL}]}"
+	log_entry $LF section "$TITLE Instance $INST_CNT of ${#INSTANCES[@]}: ${ELEMENT[${LABEL}]}"
 	HDBEXIST=true
-	plugin_command "su - ${ELEMENT[${ADM}]} -c 'HDB version'"
-	plugin_command "su - ${ELEMENT[${ADM}]} -c 'python --version'"
-	plugin_command "/usr/bin/id ${ELEMENT[${ADM}]}"
+	log_cmd $LF "su - ${ELEMENT[${ADM}]} -c 'HDB version'"
+	log_cmd $LF "su - ${ELEMENT[${ADM}]} -c 'python --version'"
+	log_cmd $LF "/usr/bin/id ${ELEMENT[${ADM}]}"
 	if [[ $? == 0 ]]; then
 		echo "RETURN CODE: $?"; echo
-		plugin_command "SAPHanaSR-monitor"
+		log_cmd $LF "SAPHanaSR-monitor"
 		echo "RETURN_CODE: $?"; echo 
-		plugin_command "SAPHanaSR-showAttr"
+		log_cmd $LF "SAPHanaSR-showAttr"
 		echo "RETURN_CODE: $?"; echo 
-		plugin_command "su - ${ELEMENT[${ADM}]} -c 'hdbnsutil -sr_state'"
+		log_cmd $LF "su - ${ELEMENT[${ADM}]} -c 'hdbnsutil -sr_state'"
 		echo "RETURN CODE: $?"; echo
-		plugin_command "su - ${ELEMENT[${ADM}]} -c 'HDBSettings.sh landscapeHostConfiguration.py --sapcontrol=1'"
+		log_cmd $LF "su - ${ELEMENT[${ADM}]} -c 'HDBSettings.sh landscapeHostConfiguration.py --sapcontrol=1'"
 		echo "RETURN CODE: $?"; echo -e $SAPHDB1; echo
-		plugin_command "su - ${ELEMENT[${ADM}]} -c 'HDBSettings.sh systemReplicationStatus.py'"
+		log_cmd $LF "su - ${ELEMENT[${ADM}]} -c 'HDBSettings.sh systemReplicationStatus.py'"
 		echo "RETURN CODE: $?"; echo -e $SAPHDB2; echo
-		plugin_command "su - ${ELEMENT[${ADM}]} -c 'HDBSettings.sh systemOverview.py'"
+		log_cmd $LF "su - ${ELEMENT[${ADM}]} -c 'HDBSettings.sh systemOverview.py'"
 		echo "RETURN CODE: $?"; echo
-		plugin_command "su - ${ELEMENT[${ADM}]} -c 'HDB info'"
+		log_cmd $LF "su - ${ELEMENT[${ADM}]} -c 'HDB info'"
 		echo "RETURN CODE: $?"; echo
 	else
 		echo "RETURN CODE: $?"; echo
 		HDBEXIST=false
 	fi
-	plugin_command "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function GetStartProfile'"
-	plugin_command "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function GetSystemInstanceList'"
-	plugin_command "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function GetProcessList'"
+	log_cmd $LF "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function GetStartProfile'"
+	log_cmd $LF "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function GetSystemInstanceList'"
+	log_cmd $LF "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function GetProcessList'"
 	echo "RETURN CODE: $?"; echo -e $SAPCONTROLEXIT; echo; echo -e $ENSAMSG1; echo -e $ENSAMSG2
 
 	INSTANCE_PROFILE_DIR=$(su - ${ELEMENT[${ADM}]} -c 'cdpro && pwd' 2>/dev/null)
 	INSTANCE_CONFIG_DIR=$(su - ${ELEMENT[${ADM}]} -c 'cdcoc && pwd' 2>/dev/null)
 	if [[ -d $INSTANCE_CONFIG_DIR ]] && [[ $HDBEXIST == true ]]; then
-		pconf_files ${INSTANCE_CONFIG_DIR}/global.ini ${INSTANCE_CONFIG_DIR}/nameserver.ini ${INSTANCE_CONFIG_DIR}/daemon.ini
+		conf_files $LF  ${INSTANCE_CONFIG_DIR}/global.ini ${INSTANCE_CONFIG_DIR}/nameserver.ini ${INSTANCE_CONFIG_DIR}/daemon.ini
 	fi
 	if [[ -d $INSTANCE_PROFILE_DIR ]]; then
-		pconf_files ${INSTANCE_PROFILE_DIR}/${ELEMENT[${SID}]}_*
+		conf_files $LF  ${INSTANCE_PROFILE_DIR}/${ELEMENT[${SID}]}_*
 	fi
 	
-	plugin_command "systemctl status SAP${ELEMENT[${SID}]}_${ELEMENT[${NUM}]}.service"
+	log_cmd $LF "systemctl status SAP${ELEMENT[${SID}]}_${ELEMENT[${NUM}]}.service"
 
 	# SUSE HANA hook script logs
 	# /usr/sap/HA1/HDB10/hanacost1/trace/nameserver_suschksrv.trc
@@ -293,13 +295,13 @@ do
 	collect_instance_log ${lfile}
 
 	## Adding support for sap-suse-cluster-connector  ##
-        plugin_command "rpm -qa | grep -E 'sap-suse-cluster-connector|sap_suse_cluster_connector'"
+        log_cmd $LF "rpm -qa | grep -E 'sap-suse-cluster-connector|sap_suse_cluster_connector'"
         if [ $? -eq 0 ]; then
-                plugin_command "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function HAGetFailoverConfig'"
+                log_cmd $LF "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function HAGetFailoverConfig'"
                 echo "RETURN CODE: $?"; echo 
-                plugin_command "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function HACheckFailoverConfig'"
+                log_cmd $LF "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function HACheckFailoverConfig'"
                 echo "RETURN CODE: $?"; echo 
-                plugin_command "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function HACheckConfig'"
+                log_cmd $LF "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function HACheckConfig'"
                 echo "RETURN CODE: $?"; echo 
 
 		# collect instance logs
@@ -314,12 +316,12 @@ do
 	 INST_CNT=$[ INST_CNT + 1 ]
 done
 ## Adding some basic cluster commands.  Refer to ha.txt in supportconfig for additional ##
-section_header "$TITLE Basic Cluster Configuration"
-	plugin_command "crm_mon -A -r -1"
-	plugin_command "crm configure show obscure:passw*"
+log_entry $LF section "$TITLE Basic Cluster Configuration"
+	log_cmd $LF "crm_mon -A -r -1"
+	log_cmd $LF "crm configure show obscure:passw*"
 
-section_header "$TITLE Log Files"
-        plugin_command "grep -E -i 'saphana|SAPDatabase|SAPInstance|SAPStartsrv|sapcontrol|saphostctrl|sap_suse_cluster_connector' /var/log/messages | tail -1000"
+log_entry $LF section "$TITLE Log Files"
+        log_cmd $LF "grep -E -i 'saphana|SAPDatabase|SAPInstance|SAPStartsrv|sapcontrol|saphostctrl|sap_suse_cluster_connector' /var/log/messages | tail -1000"
         if ! [ $RELEASE == 'VERSION="11.4"' ]; then
-                plugin_command "find /var/log/ -name pacemaker.log -exec grep -E -i 'saphana|SAPDatabase|SAPInstance|SAPStartsrv|sapcontrol|saphostctrl' {} \; | tail -1000"
+                log_cmd $LF "find /var/log/ -name pacemaker.log -exec grep -E -i 'saphana|SAPDatabase|SAPInstance|SAPStartsrv|sapcontrol|saphostctrl' {} \; | tail -1000"
         fi
