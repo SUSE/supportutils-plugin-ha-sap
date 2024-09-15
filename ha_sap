@@ -44,6 +44,7 @@ collect_instance_log() {
 ## Docs  ##
 log_entry $LF section "Referencee Documentation"
 echo -e "Current Documentation:
+\t https://documentation.suse.com/en-us/sles-sap/15-SP6/
 \t https://documentation.suse.com/en-us/sles-sap/15-SP5/
 \t https://documentation.suse.com/en-us/sles-sap/15-SP4/
 \t https://documentation.suse.com/en-us/sles-sap/15-SP3/
@@ -54,6 +55,8 @@ Tuning:
 \t https:://documentation.suse.com/sles-sap/15-SP5/single-html/SLES-SAP-guide/index.html#cha-tune
 
 Best Practice Guides: \t https://documentation.suse.com/sbp/sap/
+\tSAP HANA System Replication Scale-Out - Performance-Optimized Scenario:\t https://documentation.suse.com/sbp/sap-15/html/SLES4SAP-hana-angi-scaleout-perfopt-15/index.html
+\tHow to upgrade to SAPHanaSR-angi:\t https://www.suse.com/c/how-to-upgrade-to-saphanasr-angi/
 \tSAP HANA SR Performance Optimized Scale up:\t https://documentation.suse.com/sbp/sap-15/pdf/SLES4SAP-hana-sr-guide-PerfOpt-15_en.pdf
 \tSAP HANA SR Performance Optimized Scale out:\t https://documentation.suse.com/sbp/sap-15/pdf/SLES4SAP-hana-scaleOut-PerfOpt-15_en.pdf
 \tSAP HANA SR Performance Optimized Scale out Multi-Target:\t https://documentation.suse.com/sbp/sap-15/pdf/SLES4SAP-hana-scaleout-multitarget-perfopt-15_en.pdf
