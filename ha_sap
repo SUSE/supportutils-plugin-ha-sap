@@ -82,6 +82,7 @@ sap_suse_cluster_connector
 SAPHanaSR-ScaleOut
 resource-agents
 sapstartsrv-resource-agents
+saphana-checks
 "
 
 for THISRPM in $RPMLIST; do
@@ -347,4 +348,16 @@ log_write $LF "#==[ $TITLE Log Files ]===========================#"
 log_cmd $LF "grep -E -i 'saphana|SAPDatabase|SAPInstance|SAPStartsrv|sapcontrol|saphostctrl|sap_suse_cluster_connector' /var/log/messages | tail -1000"
 if ! [ "$RELEASE" == 'VERSION="11.4"' ]; then
 	log_cmd $LF "find /var/log/ -name pacemaker.log -exec grep -E -i 'saphana|SAPDatabase|SAPInstance|SAPStartsrv|sapcontrol|saphostctrl' {} \; | tail -1000"
+fi
+
+## running saphana-checks ##
+log_write $LF "#==[ running saphana-checks ]=======================#"
+if [ -x /usr/lib/saphana-checks/bin/saphana-check.sh ]; then
+	log_write $LF "saphana-checks provided by SUSE"
+	log_cmd $LF "/usr/lib/saphana-checks/bin/saphana-check.sh"
+else if [ -x /opt/sap/saphana-checks/bin/saphana-check.sh ]; then
+	log_write $LF "saphana-checks provided by SAP"
+	log_cmd $LF "/opt/sap/saphana-checks/bin/saphana-check.sh"
+else
+	log_write $LF "saphana-checks are not installed"
 fi
