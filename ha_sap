@@ -89,6 +89,13 @@ for THISRPM in $RPMLIST; do
 done
 log_write $LF
 
+## product information for Trento (offline) checks ##
+log_write $LF "#==[ product information ]==========================#"
+log_cmd $LF "ls -lA --time-style=long-iso /etc/products.d"
+for f in /etc/products.d/*; do
+	log_cmd $LF "/usr/bin/cat $f"
+done
+
 ## Authentication ## 
 log_write $LF "#==[ Authentication information ]===================#"
 log_cmd $LF "grep -v '^\s*\#\|^$' /etc/nsswitch.conf | head -5"
@@ -152,6 +159,8 @@ log_cmd $LF "systemctl status sapping.service"
 log_cmd $LF "systemctl status sappong.service"
 log_cmd $LF "systemctl list-unit-files | grep -i sap"
 log_cmd $LF "systemd-cgls -u SAP.slice"
+log_cmd $LF "ps -ef | grep sapstartsrv"
+log_cmd $LF "ls -lA --time-style=long-iso /etc/polkit-1/rules.d/[0-9][0-9]-SAP[A-Z][A-Z0-9][A-Z0-9]-[0-9][0-9].rules"
 
 ## SAP Exit Code Index ##
 SAPCONTROLEXIT="sapcontrol return codes: \n 
@@ -235,6 +244,7 @@ fi
 
 log_write $LF "#==[ $TITLE Troubleshooting Commands ]============#"
 log_cmd $LF "/usr/sap/hostctrl/exe/saphostctrl -function ListInstances"
+log_cmd $LF "/usr/sap/hostctrl/exe/saphostctrl -function Ping"
 if [ -n "$SIDADM" ]; then
 	log_cmd $LF "ps -U $SIDADM -f"
 fi
@@ -331,6 +341,7 @@ done
 log_write $LF "#==[ $TITLE Basic Cluster Configuration ]=========#"
 log_cmd $LF "crm_mon -A -r -1"
 log_cmd $LF "crm configure show obscure:passw*"
+log_cmd $LF "corosync-cmapctl -b"
 
 log_write $LF "#==[ $TITLE Log Files ]===========================#"
 log_cmd $LF "grep -E -i 'saphana|SAPDatabase|SAPInstance|SAPStartsrv|sapcontrol|saphostctrl|sap_suse_cluster_connector' /var/log/messages | tail -1000"
