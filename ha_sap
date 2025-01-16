@@ -42,12 +42,10 @@ collect_instance_log() {
 }
 
 #############################################################
-echo "#==[ Supportconfig Plugin for $TITLE, v${SVER} ]====#"
 log_write $LF "#==[ Supportconfig Plugin for $TITLE, v${SVER} ]====#"
 log_write $LF
 
 ## Docs  ##
-echo "#==[ Referencee Documentation ]=====================#"
 log_write $LF "#==[ Referencee Documentation ]=====================#"
 echo -e "Current Documentation:
 \t https://documentation.suse.com/en-us/sles-sap/15-SP6/
@@ -69,7 +67,7 @@ Best Practice Guides: \t https://documentation.suse.com/sbp/sap/
 \tSAP HANA SR Cost Optimized Scale Up:\t https://documentation.suse.com/sbp/sap-15/pdf/SLES4SAP-hana-sr-guide-costopt-15_en.pdf
 \tENSA1 SAP NetWeaver Enqueue Replication:\t https://documentation.suse.com/sbp/sap-15/pdf/SAP-nw740-sle15-setupguide_en.pdf
 \tENSA2 SAP S/4 HANA - Enqueue Replication:\t https://documentation.suse.com/sbp/sap-15/pdf/SAP-S4HA10-setupguide-simplemount-sle15_en.pdf
-" 2>&1 | tee -a "$LOG"/$LF
+" 2>&1 >> "$LOG"/$LF
 
 RPMLIST="
 SAPHanaSR-angi
@@ -110,7 +108,6 @@ log_cmd $LF "grep -E -R -e '[[:alnum:]]{3}adm' -e 'crm_attribute' -e 'SAPHanaSR'
 log_write $LF "#==[ SAP Tuning information ]=======================#"
 
 RELEASE=$(grep ^VERSION= /etc/os-release)
-echo -e "OS Release: $RELEASE \n"
 log_write $LF "OS Release: $RELEASE"
 if [ "$RELEASE" == 'VERSION="11.4"' ]; then
 	log_cmd $LF "chkconfig -l boot.sapconf"
@@ -355,7 +352,7 @@ log_write $LF "#==[ running saphana-checks ]=======================#"
 if [ -x /usr/lib/saphana-checks/bin/saphana-check.sh ]; then
 	log_write $LF "saphana-checks provided by SUSE"
 	log_cmd $LF "/usr/lib/saphana-checks/bin/saphana-check.sh"
-else if [ -x /opt/sap/saphana-checks/bin/saphana-check.sh ]; then
+elif [ -x /opt/sap/saphana-checks/bin/saphana-check.sh ]; then
 	log_write $LF "saphana-checks provided by SAP"
 	log_cmd $LF "/opt/sap/saphana-checks/bin/saphana-check.sh"
 else
