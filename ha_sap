@@ -270,10 +270,14 @@ do
 		log_write $LF "RETURN CODE: $?"; log_write $LF
 		log_cmd $LF "su - ${ELEMENT[${ADM}]} -c 'HDB info'"
 		log_write $LF "RETURN CODE: $?"; log_write $LF
+		log_cmd $LF "su - ${ELEMENT[${ADM}]} -c 'python getParameter.py --key=global.ini/system_replication/operation_mode --sapcontrol=1'"
+		log_write $LF "RETURN CODE: $?"; log_write $LF
 	else
 		log_write $LF "RETURN CODE: $?"; log_write $LF
 		HDBEXIST=false
 	fi
+	log_cmd $LF "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function GetVersionInfo'"
+	log_write $LF "RETURN CODE: $?"
 	log_cmd $LF "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function GetStartProfile'"
 	log_write $LF "RETURN CODE: $?"
 	log_cmd $LF "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function GetSystemInstanceList'"
