@@ -102,7 +102,7 @@ log_cmd $LF "grep -E '^[[:alnum:]]{3}adm:' /etc/passwd"
 log_cmd $LF "grep -E '^sap' /etc/passwd"
 log_cmd $LF "grep -E '^[[:alnum:]]{3}adm:' /etc/group"
 log_cmd $LF "grep -E -e '^sap' -e '^sdba:' -e '^dba:' /etc/group"
-for f in /etc/sudoers $(find /etc/sudoers.d/ ! -name "*~"  ! -name "*.*" -type f); do
+for f in /etc/sudoers $(find /etc/sudoers.d/ ! -name "*~"  ! -name "*.*" -type f | sort ); do
 	log_cmd $LF "grep -E -e '[[:alnum:]]{3}adm' -e 'crm_attribute' -e 'SAPHanaSR' $f"
 done
 ## SAP BASIC Tuning ##
