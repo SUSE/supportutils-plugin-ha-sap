@@ -6,7 +6,7 @@
 # License:     GPLv2
 #############################################################
 
-SVER='1.0.7'
+SVER='1.0.8'
 RCFILE="/usr/lib/supportconfig/resources/supportconfig.rc"
 TITLE="SUSE SAP"
 LF=plugin-ha_sap.txt
@@ -279,7 +279,7 @@ do
 		log_write $LF "RETURN CODE: $?"; log_write $LF
 		log_cmd $LF "su - ${ELEMENT[${ADM}]} -c 'HDB info'"
 		log_write $LF "RETURN CODE: $?"; log_write $LF
-		log_cmd $LF "su - ${ELEMENT[${ADM}]} -c 'python getParameter.py --key=global.ini/system_replication/operation_mode --sapcontrol=1'"
+		log_cmd $LF "su - ${ELEMENT[${ADM}]} -c 'HDBSettings.sh getParameter.py --key=global.ini/system_replication/operation_mode --sapcontrol=1'"
 		log_write $LF "RETURN CODE: $?"; log_write $LF
 	else
 		log_write $LF "RETURN CODE: $?"; log_write $LF
@@ -297,7 +297,7 @@ do
 
 	INSTANCE_PROFILE_DIR=$(su - "${ELEMENT[${ADM}]}" -c 'cdpro && pwd' 2>/dev/null)
 	INSTANCE_CONFIG_DIR=$(su - "${ELEMENT[${ADM}]}" -c 'cdcoc && pwd' 2>/dev/null)
-	INSTANCE_TRACE_DIR=$(su - "${ELEMENT[${ADM}]}" -c 'cdtarce && pwd' 2>/dev/null)
+	INSTANCE_TRACE_DIR=$(su - "${ELEMENT[${ADM}]}" -c 'cdtrace && pwd' 2>/dev/null)
 	if [[ -d $INSTANCE_CONFIG_DIR ]] && [[ $HDBEXIST == true ]]; then
 		conf_files $LF  "${INSTANCE_CONFIG_DIR}"/global.ini "${INSTANCE_CONFIG_DIR}"/nameserver.ini "${INSTANCE_CONFIG_DIR}"/daemon.ini
 	fi
