@@ -347,6 +347,10 @@ do
 	collect_instance_log "${trace_dir}"/nameserver_saphanasr_multitarget_hook.trc
 	collect_instance_log "${trace_dir}"/xsa_diagnose_results.txt
 
+	# Extract susHanaSR entries from active nameserver traces
+	log_write $LF "#==[ susHanaSR Hook Events ]========================#"
+	log_cmd $LF "grep -i 'sushanasr' ${trace_dir}/nameserver_*.trc | tail -n 1000"
+
 	## Adding support for sap-suse-cluster-connector  ##
         if log_cmd $LF "rpm -qa | grep -E 'sap-suse-cluster-connector|sap_suse_cluster_connector'"; then
                 log_cmd $LF "su - ${ELEMENT[${ADM}]} -c 'sapcontrol -nr ${ELEMENT[${NUM}]} -function HAGetFailoverConfig'"
